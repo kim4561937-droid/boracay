@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>배달 다이어트 - 배달을 줄이는 즐거운 습관</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <span class="brand-emoji">🥗</span>
+        <h1>배달 다이어트</h1>
+      </div>
+      <div class="header-actions">
+        <button id="themeToggleBtn" class="icon-btn" title="테마 변경" aria-label="Toggle Theme">🌓</button>
+      </div>
+    </header>
+
+    <!-- Streak Card -->
+    <section class="card streak-card">
+      <div class="streak-badge" id="streakBadge">
+        <span id="streakEmoji">🔥</span>
+      </div>
+      <div class="streak-info">
+        <h3>연속 도전 기록</h3>
+        <p><span id="streakCount">0</span>일 연속 성공 중</p>
+      </div>
+    </section>
+
+    <!-- Savings Dashboard -->
+    <section class="card savings-dashboard">
+      <h2 class="dashboard-title">누적 절약 금액</h2>
+      <div class="saved-total" id="totalSavedText">0<span>원</span></div>
+      <div>
+        <div class="saved-today-badge">
+          <span>오늘 절약:</span>
+          <strong id="todaySavedText">0원</strong>
+        </div>
+      </div>
+      
+      <!-- Interactive Refusal Button Area -->
+      <div class="main-action-area">
+        <button class="diet-btn" id="successBtn">
+          <span class="diet-btn-icon">🍔</span>
+          <span class="diet-btn-label">배달 참기 성공!</span>
+        </button>
+        <div class="refusal-count-text">
+          오늘 총 <span id="todayCount">0</span>번 참았습니다.
+        </div>
+      </div>
+    </section>
+
+    <!-- Monthly Goal & Progress -->
+    <section class="card progress-container">
+      <div class="progress-header">
+        <div class="progress-title">
+          <span>🎯 목표 달성률</span>
+          <span class="progress-percent" id="progressPercent">0%</span>
+        </div>
+        <div class="goal-editor">
+          <!-- Text clickable trigger -->
+          <span class="goal-text" id="goalTextBtn" title="클릭하여 목표 금액 변경">목표: 200,000원</span>
+          <!-- Inline Input for Goal -->
+          <div class="goal-input-wrapper" id="goalInputWrapper">
+            <input type="number" id="goalInput" class="goal-input" min="1000" step="10000" value="200000" aria-label="Goal amount">
+            <button id="saveGoalBtn" class="icon-btn" aria-label="Save goal">✓</button>
+          </div>
+        </div>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-labels">
+        <span id="progressCurrent">0원</span>
+        <span id="progressGoal">200,000원</span>
+      </div>
+    </section>
+
+    <!-- Alternative Action Suggestion -->
+    <section class="card alt-card">
+      <div class="alt-header">
+        <div class="alt-title">
+          <span>💡 오늘 추천 대체 행동</span>
+        </div>
+        <button id="refreshAltBtn" class="refresh-btn" title="다른 행동 추천받기" aria-label="Refresh Suggestion">🔄</button>
+      </div>
+      <div class="alt-content" id="altContentArea">
+        <div class="alt-emoji" id="altEmoji">💧</div>
+        <div class="alt-text" id="altText">물 한 잔 가득 마시며 배고픔 달래기</div>
+      </div>
+    </section>
+
+    <!-- Achievement Badges -->
+    <section class="card badge-card">
+      <h2 class="history-header">🏆 획득한 칭호 배지</h2>
+      <div class="badge-grid">
+        <!-- Badge 1 -->
+        <div class="badge-item" id="badge-first">
+          <div class="badge-icon">🌱</div>
+          <div class="badge-name">첫 다이어트</div>
+          <div class="badge-desc">첫 참기 달성</div>
+        </div>
+        <!-- Badge 2 -->
+        <div class="badge-item" id="badge-streak3">
+          <div class="badge-icon">🔥</div>
+          <div class="badge-name">작심 삼일</div>
+          <div class="badge-desc">3일 연속 성공</div>
+        </div>
+        <!-- Badge 3 -->
+        <div class="badge-item" id="badge-streak7">
+          <div class="badge-icon">👑</div>
+          <div class="badge-name">의지의 한국인</div>
+          <div class="badge-desc">7일 연속 성공</div>
+        </div>
+        <!-- Badge 4 -->
+        <div class="badge-item" id="badge-streak30">
+          <div class="badge-icon">💎</div>
+          <div class="badge-name">배달의 단절</div>
+          <div class="badge-desc">30일 연속 성공</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- History Log -->
+    <section class="card history-card">
+      <h2 class="history-header">📅 최근 참기 내역</h2>
+      <div class="history-list" id="historyList">
+        <div class="no-history" id="noHistoryMsg">아직 등록된 참기 기록이 없습니다.</div>
+      </div>
+    </section>
+
+    <!-- App Reset Footer -->
+    <footer class="app-footer">
+      <button class="reset-data-btn" id="resetDataBtn">초기화 및 처음부터 시작</button>
+    </footer>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-container" id="toast">
+    <span id="toastEmoji">🎉</span>
+    <span id="toastMessage">축하합니다!</span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

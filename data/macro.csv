@@ -1,0 +1,17 @@
+id,name,value,trend
+1,미국 기준금리,5.25%,HOLD
+2,연준 정책방향,HAWKISH,UP
+3,미국 10년물 금리,4.45%,UP
+4,미국 실질금리,2.15%,UP
+5,달러 인덱스,105.3,UP
+6,글로벌 M2 증가율,4.2%,DOWN
+7,글로벌 유동성 방향,TIGHTENING,DOWN
+8,원/달러 환율,1382.5,UP
+9,달러 강세 여부,STRONG,UP
+10,원화 강세 여부,WEAK,DOWN
+11,VIX (변동성 지수),21.2,UP
+12,공포지수 (F&G),38 (Fear),DOWN
+13,주식 수급,OUTFLOW,DOWN
+14,크립토 수급,NET_INFLOW,UP
+15,스테이블코인 공급량,$162B,UP
+16,거래소 BTC 보유량,1.82M,DOWN

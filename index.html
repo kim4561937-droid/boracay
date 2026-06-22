@@ -2,301 +2,400 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   
   <!-- SEO Optimization -->
-  <title>Signal Pulse - Noise-Free Curation Dashboard</title>
-  <meta name="description" content="글로벌 시장의 소음을 제거하고 꼭 봐야 할 5%의 핵심 신호만 점수화하여 제공하는 투자 인텔리전스 플랫폼.">
-  <meta name="keywords" content="Signal Pulse, 투자 신호, 인플레이션, 거시경제, 비트코인, 금, 포트폴리오">
+  <title>경제적 자유 설계 계산기</title>
+  <meta name="description" content="현재 월 생활비 기준으로 경제적 자유 달성 시점에 필요한 자금과 그 자금을 마련하기 위해 매월 저축해야 하는 투자금을 단리와 복리로 역산해주는 웹 시뮬레이터.">
   
-  <!-- Premium Stylesheets & Fonts -->
-  <link rel="stylesheet" href="css/style.css">
+  <!-- Premium Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@500;600;700;800;900&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/responsive.css">
 </head>
 <body>
 
-  <!-- Main App Shell -->
-  <div class="app-wrapper">
-    
-    <!-- A. Header Section -->
-    <header>
-      <div class="brand-container">
-        <!-- Modern Glowing Logo -->
-        <div class="logo-wrapper">
-          <img src="assets/logo.svg" alt="Signal Pulse Logo" width="100%" height="100%">
-        </div>
-        <div class="brand-text">
-          <h1>Signal Pulse</h1>
-          <p>Noise-Free Investing</p>
-        </div>
+  <!-- App Header -->
+  <header>
+    <div class="container header-container">
+      <div class="brand">
+        <h1>경제적 자유 설계 계산기 <span class="logo-tag">MVP v1.0</span></h1>
+        <p>현재 생활비를 기준으로 경제적 자유 달성에 필요한 목표 자금과 매월 투자액을 역산합니다.</p>
       </div>
-      
       <div class="header-actions">
-        <!-- Settings Trigger (CSV File Manager) -->
-        <button id="settings-btn" class="btn btn-primary" title="CSV 데이터 관리">
-          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="18" height="18" style="vertical-align: middle;">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-          </svg>
-          CSV Manager
+        <button id="btn-theme-toggle" class="btn" title="배경 색상 전환 (라이트/다크)">
+          <!-- Sun icon -->
+          <svg id="theme-icon-sun" class="hide" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          <!-- Moon icon -->
+          <svg id="theme-icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+          <span id="theme-text">라이트 모드</span>
+        </button>
+        <button id="btn-load-example" class="btn btn-primary" title="예시 데이터를 로드합니다">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          예시값 불러오기
+        </button>
+        <button id="btn-reset" class="btn" title="모든 입력값을 초기화합니다">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0-5v5h5"/></svg>
+          초기화
         </button>
       </div>
-    </header>
-
-    <!-- App Description Section -->
-    <div class="app-description-card card" style="padding: 16px 20px; background: linear-gradient(135deg, rgba(0, 212, 255, 0.03) 0%, rgba(22, 199, 132, 0.03) 100%); margin-top: -16px;">
-      <p style="font-size: 0.88rem; line-height: 1.6; color: var(--text-muted);">
-        <strong>Signal Pulse</strong>는 글로벌 금융 시장의 막대한 정보 소음(Noise)을 제어하고 실질 투자 유효성을 가진 5%의 핵심 신호(Signal)만을 엄선하여 보여줍니다. 보유하신 미국/한국 주식, 퇴직연금 ETF, 암호화폐 등의 자산을 등록하시면 <strong>최신 뉴스 및 이벤트, 기업 펀더멘탈(매출·영업이익 성장률, PER, PBR, ROE, 온체인 지표 등), 기술적 분석, 시장 심리/수급 지표</strong>를 종합 분석하여 객관적인 투자 가치를 평가해 드립니다.
-      </p>
     </div>
-    <!-- B. Today's Signal Section (Large Highlight Card) -->
-    <section class="today-section">
-      <h3 class="section-label">Today Signal (오늘의 핵심 신호)</h3>
-      <div id="today-signal-container">
-        <!-- Rendered dynamically by js/ui.js -->
-        <div class="empty-today">로딩 중...</div>
-      </div>
-    </section>
+  </header>
 
-    <!-- C. Macro Indicators Grid -->
-    <section class="macro-section">
-      <h3 class="section-label" style="margin-bottom: 12px;">Market Status (거시 경제 주요 지표)</h3>
-      <div id="macro-grid" class="macro-grid">
-        <!-- Rendered dynamically by js/ui.js -->
-      </div>
-    </section>
-
-    <!-- D. Noise Filter Panel -->
-    <section class="filter-section">
-      <div class="filter-header">
-        <h3 class="filter-title">
-          <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"></path>
-          </svg>
-          Noise Filter (노이즈 제거 필터)
-        </h3>
-        <span id="filter-count" class="filter-count">활성화 필터: 0/0</span>
-      </div>
+  <main class="container">
+    <div class="dashboard-grid">
       
-      <div id="filter-buttons" class="filter-buttons">
-        <!-- Toggle buttons rendered dynamically -->
-      </div>
-    </section>
+      <!-- Input Sidebar -->
+      <section class="card inputs-area">
+        <h2 class="form-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          조건 입력 설정
+        </h2>
 
-    <!-- E. Signal List Feed -->
-    <section class="feed-section">
-      <div class="feed-header">
-        <h3 class="feed-title">Signal Feed (큐레이션 리스트)</h3>
-      </div>
-      
-      <div id="feed-grid" class="feed-grid">
-        <!-- Rendered dynamically via Grid layout based on device rules -->
-      </div>
-    </section>
-
-    <!-- G. My Holdings Curation Card -->
-    <section class="holdings-section">
-      <div class="card holdings-card">
-        <h3 class="filter-title" style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
-          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"></path>
-          </svg>
-          My Holdings (내 보유 자산 매칭 알림)
-        </h3>
-        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 14px;">보유 종목의 티커를 등록하시면 해당 종목이 직접 언급된 고영향도(50점 이상) 시그널만 실시간 필터링하여 알려드립니다.</p>
+        <!-- Group 1: Timeframes -->
+        <h3 class="form-group-title">기본 연령 정보</h3>
         
-        <div class="holdings-input-row" style="display: flex; gap: 8px; margin-bottom: 12px;">
-          <input type="text" id="holdings-input" placeholder="예: 삼성전자, NVDA, BTC, TLT (쉼표로 구분)" style="flex-grow: 1; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); background-color: rgba(3,7,18,0.5); color: #FFF; font-size: 0.85rem; outline: none; transition: var(--transition-fast);">
-          <button id="holdings-save-btn" class="btn btn-primary" style="padding: 10px 16px;">등록</button>
+        <div class="form-group">
+          <div class="form-label-row">
+            <label for="current-age">현재 나이</label>
+          </div>
+          <div class="input-container" id="current-age-container">
+            <input type="number" id="current-age" min="20" max="80" placeholder="40" inputmode="numeric">
+            <span class="input-suffix">세</span>
+          </div>
+          <span class="validation-message" id="current-age-msg"></span>
         </div>
+
+        <div class="form-group">
+          <div class="form-label-row">
+            <label for="retire-age">경제적 자유 달성 나이</label>
+          </div>
+          <div class="input-container" id="retire-age-container">
+            <input type="number" id="retire-age" min="21" max="100" placeholder="60" inputmode="numeric">
+            <span class="input-suffix">세</span>
+          </div>
+          <span class="validation-message" id="retire-age-msg"></span>
+        </div>
+
+        <div class="form-group">
+          <div class="form-label-row">
+            <label for="life-expectancy">기대수명</label>
+          </div>
+          <div class="input-container" id="life-expectancy-container">
+            <input type="number" id="life-expectancy" min="22" max="110" placeholder="90" inputmode="numeric">
+            <span class="input-suffix">세</span>
+          </div>
+          <span class="validation-message" id="life-expectancy-msg"></span>
+        </div>
+
+        <!-- Group 2: Expenses & Assets -->
+        <h3 class="form-group-title">자금 정보</h3>
+
+        <div class="form-group">
+          <div class="form-label-row">
+            <label for="monthly-expense-now">현재 월 생활비</label>
+          </div>
+          <div class="input-container" id="monthly-expense-now-container">
+            <input type="text" id="monthly-expense-now" placeholder="3,500,000" inputmode="numeric">
+            <span class="input-suffix">원</span>
+          </div>
+          <div class="quick-actions">
+            <button class="btn-quick" data-target="monthly-expense-now" data-value="100000">+10만</button>
+            <button class="btn-quick" data-target="monthly-expense-now" data-value="500000">+50만</button>
+            <button class="btn-quick" data-target="monthly-expense-now" data-value="1000000">+100만</button>
+          </div>
+          <span class="validation-message" id="monthly-expense-now-msg"></span>
+        </div>
+
+        <div class="form-group">
+          <div class="form-label-row">
+            <label for="current-assets">현재 보유 자산</label>
+          </div>
+          <div class="input-container" id="current-assets-container">
+            <input type="text" id="current-assets" placeholder="100,000,000" inputmode="numeric">
+            <span class="input-suffix">원</span>
+          </div>
+          <div class="quick-actions">
+            <button class="btn-quick" data-target="current-assets" data-value="10000000">+1,000만</button>
+            <button class="btn-quick" data-target="current-assets" data-value="50000000">+5,000만</button>
+            <button class="btn-quick" data-target="current-assets" data-value="100000000">+1억</button>
+          </div>
+          <span class="validation-message" id="current-assets-msg"></span>
+        </div>
+
+        <div class="form-group">
+          <div class="form-label-row">
+            <label for="monthly-pension">경제적 자유 달성 후 예상 월 연금 수령액</label>
+          </div>
+          <div class="input-container" id="monthly-pension-container">
+            <input type="text" id="monthly-pension" placeholder="1,200,000" inputmode="numeric">
+            <span class="input-suffix">원</span>
+          </div>
+          <div class="quick-actions">
+            <button class="btn-quick" data-target="monthly-pension" data-value="100000">+10만</button>
+            <button class="btn-quick" data-target="monthly-pension" data-value="500000">+50만</button>
+            <button class="btn-quick" data-target="monthly-pension" data-value="1000000">+100만</button>
+          </div>
+          <span class="validation-message" id="monthly-pension-msg"></span>
+        </div>
+
+        <!-- Group 3: Market/Return Assumptions -->
+        <h3 class="form-group-title">수익률 및 경제 가정</h3>
+
+        <div class="form-group">
+          <div class="form-label-row">
+            <label for="inflation-rate">연평균 인플레이션율(물가상승률)</label>
+            <span class="help-trigger" data-help="inflation" title="도움말 확인">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
+            </span>
+          </div>
+          <div class="input-container" id="inflation-rate-container">
+            <input type="number" id="inflation-rate" step="0.1" placeholder="2.5">
+            <span class="input-suffix">%</span>
+          </div>
+          <span class="validation-message" id="inflation-rate-msg"></span>
+        </div>
+
+        <div class="form-group">
+          <div class="form-label-row">
+            <label for="pre-ret-return">경제적 자유 달성 전 예상 연 수익률</label>
+            <span class="help-trigger" data-help="pre_return" title="도움말 확인">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
+            </span>
+          </div>
+          <div class="input-container" id="pre-ret-return-container">
+            <input type="number" id="pre-ret-return" step="0.1" placeholder="6.0">
+            <span class="input-suffix">%</span>
+          </div>
+          <span class="validation-message" id="pre-ret-return-msg"></span>
+        </div>
+
+        <div class="form-group">
+          <div class="form-label-row">
+            <label for="post-ret-return">경제적 자유 달성 후 자산 운용 수익률</label>
+            <span class="help-trigger" data-help="post_return" title="도움말 확인">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
+            </span>
+          </div>
+          <div class="input-container" id="post-ret-return-container">
+            <input type="number" id="post-ret-return" step="0.1" placeholder="3.0">
+            <span class="input-suffix">%</span>
+          </div>
+          <span class="validation-message" id="post-ret-return-msg"></span>
+        </div>
+
+        <!-- Scenario Preset Component -->
+        <div class="scenario-presets-container">
+          <div class="scenario-label">시나리오 프리셋 프리로드</div>
+          <div class="scenario-tabs">
+            <button class="scenario-tab" data-preset="conservative">보수적</button>
+            <button class="scenario-tab" data-preset="base">기준</button>
+            <button class="scenario-tab" data-preset="optimistic">낙관적</button>
+          </div>
+          <div class="scenario-desc" id="scenario-desc">로딩 중...</div>
+        </div>
+
+        <!-- Yearly return toggler -->
+        <div class="toggle-group">
+          <span class="toggle-label">연도별 변동 수익률 적용(CSV 예시)</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="use-yearly-return">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Output Results Area -->
+      <section class="results-area" id="results-section">
         
-        <div id="holdings-tags" class="ticker-container" style="margin-bottom: 14px; margin-top: 0;">
-          <!-- Rendered dynamically -->
-        </div>
-
-        <div id="holdings-alerts-box" class="holdings-alerts-box">
-          <!-- Rendered dynamically -->
-        </div>
-      </div>
-    </section>
-
-    <!-- H. AI Model Self-Optimization Section -->
-    <section class="optimization-section">
-      <div class="card optimization-card" style="background: linear-gradient(135deg, #121A2F 0%, #0F1626 100%);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
-          <h3 class="filter-title" style="display: flex; align-items: center; gap: 8px; margin: 0;">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v1.244c0 .83-.615 1.507-1.385 1.597-.77.09-1.385.768-1.385 1.597v1.244M3 9.75h1.244c.83 0 1.507-.615 1.597-1.385.09-.77.768-1.385 1.597-1.385h1.244m10.5 0h-1.244c-.83 0-1.507.615-1.597 1.385-.09.77-.768 1.385-1.597 1.385h-1.244m0-6V3.104M12 21c-4.97 0-9-4.03-9-9s4.03-9 9-9 9 4.03 9 9-4.03 9-9 9z"></path>
-            </svg>
-            AI 모델 자가 최적화 및 오차 정정 로그 (Self-Optimization Logs)
+        <!-- Summary sentence card -->
+        <div class="card summary-sentence-card">
+          <h3>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+            한 눈에 보는 경제적 자유 달성 시나리오 요약
           </h3>
-          <span id="optimization-status" class="status-value-pill" style="background-color: rgba(22,199,132,0.1); color: var(--success); border: 1px solid rgba(22,199,132,0.15);">정확도 +4.2% 개선</span>
-        </div>
-        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">
-          본 시스템은 실제 투자 유효성을 객관적으로 평가하고 피드백 루프를 통해 스코어링 모형을 정밀하게 최적화합니다. 신호 카드 우측의 <strong>[오차 보고]</strong> 피드백을 수집하여 Local PC에서 즉시 가중치를 자가 정정합니다.
-        </p>
-
-        <!-- Current Weights & Status Indicators -->
-        <div class="optimization-status-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; background-color: rgba(3,7,18,0.4); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border);">
-          <div style="display: flex; flex-direction: column;">
-            <span style="font-size: 0.65rem; color: var(--text-dark); text-transform: uppercase;">영향도 가중치 (Impact Wt)</span>
-            <span id="opt-weight-impact" style="font-size: 1.1rem; font-weight: 700; color: var(--primary);">0.70</span>
-          </div>
-          <div style="display: flex; flex-direction: column;">
-            <span style="font-size: 0.65rem; color: var(--text-dark); text-transform: uppercase;">신뢰도 가중치 (Confidence Wt)</span>
-            <span id="opt-weight-confidence" style="font-size: 1.1rem; font-weight: 700; color: var(--primary);">0.30</span>
-          </div>
-          <div style="display: flex; flex-direction: column;">
-            <span style="font-size: 0.65rem; color: var(--text-dark); text-transform: uppercase;">학습 세대 (Learning Epoch)</span>
-            <span id="opt-epoch" style="font-size: 1.1rem; font-weight: 700; color: var(--success);">Epoch 12</span>
+          <p class="summary-sentence-text" id="summary-text">
+            입력값을 분석하여 최적의 적립 시나리오 결과를 한 줄로 계산해 요약합니다.
+          </p>
+          <div class="summary-actions">
+            <button id="btn-copy-summary" class="btn btn-sm" title="요약 문장을 복사하여 텍스트로 보관합니다">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+              요약 복사
+            </button>
+            <button id="btn-copy-link" class="btn btn-sm" title="이 입력 조건 그대로를 다른 사람에게 공유합니다">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              계획 공유 링크 복사
+            </button>
           </div>
         </div>
 
-        <!-- Scrollable logs timeline -->
-        <div id="optimization-logs" style="display: flex; flex-direction: column; gap: 8px; max-height: 160px; overflow-y: auto; padding-right: 4px;">
-          <!-- Rendered dynamically -->
-        </div>
-      </div>
-    </section>
-
-  </div>
-
-  <!-- F. Settings Modal Drawer (CSV Uploader/Editor) -->
-  <div id="settings-modal" class="modal-overlay">
-    <div class="modal-container">
-      <div class="modal-header">
-        <h2 class="modal-title">
-          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-          </svg>
-          CSV Manager
-        </h2>
-        <button id="modal-close" class="modal-close">&times;</button>
-      </div>
-      
-      <div class="modal-body">
-        <!-- Tab navigation -->
-        <div class="uploader-tabs">
-          <button id="tab-signals" class="tab-btn active">signals.csv (신호)</button>
-          <button id="tab-macro" class="tab-btn">macro.csv (지표)</button>
-          <button id="tab-portfolio" class="tab-btn">portfolio.csv (포트폴리오)</button>
-        </div>
-        
-        <!-- Live storage status indicator -->
-        <div class="status-badge-container">
-          <span class="status-label">현재 연결 상태:</span>
-          <span id="storage-status" class="status-value-pill">Loading...</span>
+        <!-- Friendly Motivational Advice Card -->
+        <div class="card motivation-card" id="motivation-section">
+          <div class="motivation-badge">
+            <span class="motivation-icon" id="motivation-icon">🌟</span>
+            <span id="motivation-title">오늘의 성장 팁 & 응원</span>
+          </div>
+          <p class="motivation-text" id="motivation-text">
+            "천 리 길도 한 걸음부터 시작합니다. 지금 작은 시작이 복리의 마법을 만나 큰 자산으로 자라날 것입니다!"
+          </p>
         </div>
 
-        <!-- File Drag and Drop Zone -->
-        <div id="csv-dropzone" class="uploader-dropzone">
-          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"></path>
-          </svg>
-          <span>이곳에 CSV 파일을 끌어놓거나 클릭하세요.</span>
-          <p>signals.csv, macro.csv, portfolio.csv 지원</p>
-          <input type="file" id="csv-file-input" class="file-input" accept=".csv">
+        <!-- 6 Result Cards Grid -->
+        <div class="cards-grid">
+          <div class="result-card">
+            <span class="result-card-label">경제적 자유 달성까지 남은 기간</span>
+            <span class="result-card-val" id="val-years-to-retire">-</span>
+            <span class="result-card-desc">달성 전 적립 가능 기한</span>
+          </div>
+
+          <div class="result-card">
+            <span class="result-card-label">경제적 자유 달성 후 생활 기간</span>
+            <span class="result-card-val" id="val-retirement-years">-</span>
+            <span class="result-card-desc">달성 시점부터 기대수명까지</span>
+          </div>
+
+          <div class="result-card">
+            <span class="result-card-label">경제적 자유 달성 시점 월 생활비</span>
+            <span class="result-card-val" id="val-future-expense">-</span>
+            <span class="result-card-desc">물가상승 반영 미래 가치</span>
+          </div>
+
+          <div class="result-card">
+            <span class="result-card-label">달성 후 필요 총액 (할인 전)</span>
+            <span class="result-card-val" id="val-gross-expense">-</span>
+            <span class="result-card-desc">총 인플레이션 누적 합산</span>
+          </div>
+
+          <div class="result-card">
+            <span class="result-card-label">실제 목표 자산</span>
+            <span class="result-card-val" id="val-required-assets">-</span>
+            <span class="result-card-desc">연금 차감 및 운용수익 반영</span>
+          </div>
+
+          <div class="result-card highlight">
+            <span class="result-card-label" style="color: #c084fc">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m22 2-7 20-4-9-9-4Z"/></svg>
+              월 필요 적립액 (복리)
+            </span>
+            <span class="result-card-val" id="val-savings-compound">-</span>
+            <span class="result-card-desc" style="color: #e9d5ff">월말 적립 및 매월 투자 복리 기준</span>
+          </div>
         </div>
-        
-        <!-- Raw Text Preview & Editing -->
-        <div class="raw-csv-preview">
-          <label for="csv-textarea">Raw 데이터 편집 및 확인</label>
-          <textarea id="csv-textarea" class="csv-textarea" placeholder="CSV text data..."></textarea>
+
+        <!-- Compound vs Simple Educational Card -->
+        <div class="card result-card warning" style="flex-direction: row; gap: 20px; align-items: center; justify-content: space-between;">
+          <div style="flex: 1;">
+            <div class="result-card-label" style="color: #fcd34d">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              단리/복리 효과 차이 (단리 필요 적립액 대비)
+            </div>
+            <div style="font-size: 13px; color: var(--color-text-sub); margin-top: 4px;">
+              동일 자산을 단리로 모을 때 월 적립 필요액: <strong id="val-savings-simple" style="color: var(--color-text-main)">-</strong>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <span style="font-size: 11px; color: var(--color-text-dark); display: block;">복리 투자로 매월 절감액</span>
+            <span class="result-card-val" id="val-savings-diff" style="color: #fbbf24; font-size: 20px;">-</span>
+          </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button id="reset-data-btn" class="btn" style="border-color: var(--danger); color: var(--danger);">기본값 복구</button>
-        <button id="save-csv-btn" class="btn btn-primary">저장 및 동기화</button>
-      </div>
+
+        <!-- Graphical Visualizations -->
+        <div class="card viz-section">
+          <div class="viz-tabs">
+            <button class="viz-tab active" data-target="panel-growth">경제적 자유 달성 전 자산 성장선</button>
+            <button class="viz-tab" data-target="panel-compare">단리 vs 복리 누적 비교</button>
+            <button class="viz-tab" data-target="panel-depletion">경제적 자유 달성 후 자산 추이</button>
+          </div>
+          
+          <div class="viz-panels">
+            <div class="viz-panel active" id="panel-growth">
+              <div class="chart-container">
+                <canvas id="chart-growth"></canvas>
+              </div>
+            </div>
+            <div class="viz-panel" id="panel-compare">
+              <div class="chart-container">
+                <canvas id="chart-compare"></canvas>
+              </div>
+            </div>
+            <div class="viz-panel" id="panel-depletion">
+              <div class="chart-container">
+                <canvas id="chart-depletion"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Yearly projections Table -->
+        <div class="card table-section">
+          <div class="table-header-row">
+            <h3 class="table-title">경제적 자유 달성 전 자산 성장 시뮬레이션 테이블</h3>
+          </div>
+          
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th style="text-align: left;">나이</th>
+                  <th class="hide-on-mobile">경과년수</th>
+                  <th class="hide-on-mobile">누적 납입액</th>
+                  <th>기대 누적 자산 (복리)</th>
+                  <th class="hide-on-mobile">기대 누적 자산 (단리)</th>
+                  <th>목표 달성률</th>
+                </tr>
+              </thead>
+              <tbody id="projection-table-body">
+                <!-- Javascript populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- Help Overlay / Tooltip Modal Dialog -->
+  <div class="tooltip-overlay" id="help-overlay"></div>
+  <div class="tooltip-modal" id="help-modal">
+    <div class="tooltip-header">
+      <h4 id="help-title">도움말</h4>
+      <button class="tooltip-close" id="help-close" title="닫기">&times;</button>
+    </div>
+    <div class="tooltip-body" id="help-body">
+      설명 내용이 들어갑니다.
     </div>
   </div>
 
-  <!-- Action Explanation Modal (Dynamic Help) -->
-  <div id="action-explanation-modal" class="modal-overlay">
-    <div class="modal-container" style="max-width: 480px;">
-      <div class="modal-header">
-        <h2 class="modal-title" style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 1.2rem;">💡</span>
-          <span id="action-explanation-title">추천 행동 지침 가이드</span>
-        </h2>
-        <button id="action-modal-close" class="modal-close">&times;</button>
-      </div>
-      <div class="modal-body" style="gap: 12px;">
-        <div id="action-explanation-content" style="line-height: 1.6; font-size: 0.9rem; color: var(--text-main);">
-          <!-- Injected dynamically -->
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button id="action-modal-btn-close" class="btn btn-primary" style="width: 100%; justify-content: center;">확인</button>
-      </div>
+  <!-- Toast Toast Notification popup -->
+  <div class="toast" id="toast">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
+    성공 알림 문구
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-content">
+      <p class="legal-notice">
+        <strong>법적 고지사항 및 안내:</strong> 본 서비스는 입력값과 가정을 기초로 한 단순 시뮬레이션 결과이며 미래의 투자 수익이나 실제 경제적 자유 달성에 필요한 자금을 확정/보장하지 않습니다. 개개인의 실제 경제적 자유 달성 필요 자금은 물가 변동성, 세금 제도, 건강 상태, 투자 성과 등 다양한 요인에 따라 다르게 산출될 수 있습니다. 본 결과를 재무 의사결정에 그대로 활용하시기 전에 재무 설계 전문가 등과의 추가적인 상담을 권장합니다.
+      </p>
+      <p class="copyright">&copy; 2026 경제적 자유 설계 계산기. All rights reserved.</p>
     </div>
-  </div>
+  </footer>
 
-  <!-- Error Report Modal (AI Self-Correction Input) -->
-  <div id="error-report-modal" class="modal-overlay">
-    <div class="modal-container" style="max-width: 440px;">
-      <div class="modal-header">
-        <h2 class="modal-title" style="display: flex; align-items: center; gap: 8px;">
-          <span>⚠️</span>
-          <span>예측 오차 및 피드백 보고</span>
-        </h2>
-        <button id="error-modal-close" class="modal-close">&times;</button>
-      </div>
-      <div class="modal-body" style="gap: 14px;">
-        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
-          선택하신 신호 <strong id="error-signal-title" style="color: #FFF;">-</strong>의 예측 방향과 실제 시장 반응에 오차가 발생했나요? 아래의 주요 오차 요인을 선택해주시면 AI 모델이 가중치를 조정하여 자동 보정합니다.
-        </p>
-        <input type="hidden" id="error-signal-id">
-        
-        <div class="feedback-options" style="display: flex; flex-direction: column; gap: 8px;">
-          <label class="feedback-opt-label" style="display: flex; align-items: center; gap: 10px; background-color: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 12px; border-radius: 10px; cursor: pointer; transition: var(--transition-fast);">
-            <input type="radio" name="error-reason" value="flow" checked style="accent-color: var(--primary);">
-            <div style="display: flex; flex-direction: column;">
-              <strong style="font-size: 0.85rem; color: #FFF;">시장 수급 불일치 (Flow Divergence)</strong>
-              <span style="font-size: 0.75rem; color: var(--text-muted);">외인/기관 수급 왜곡 또는 일시 이탈</span>
-            </div>
-          </label>
-          <label class="feedback-opt-label" style="display: flex; align-items: center; gap: 10px; background-color: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 12px; border-radius: 10px; cursor: pointer; transition: var(--transition-fast);">
-            <input type="radio" name="error-reason" value="fundamental" style="accent-color: var(--primary);">
-            <div style="display: flex; flex-direction: column;">
-              <strong style="font-size: 0.85rem; color: #FFF;">펀더멘탈 왜곡 (Fundamental Lag)</strong>
-              <span style="font-size: 0.75rem; color: var(--text-muted);">매출/영업이익 성장이 단기 주가에 미반영</span>
-            </div>
-          </label>
-          <label class="feedback-opt-label" style="display: flex; align-items: center; gap: 10px; background-color: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 12px; border-radius: 10px; cursor: pointer; transition: var(--transition-fast);">
-            <input type="radio" name="error-reason" value="news" style="accent-color: var(--primary);">
-            <div style="display: flex; flex-direction: column;">
-              <strong style="font-size: 0.85rem; color: #FFF;">뉴스 선반영 오차 (News Priced-in)</strong>
-              <span style="font-size: 0.75rem; color: var(--text-muted);">호재/악재 뉴스 정보가 이미 가격에 반영됨</span>
-            </div>
-          </label>
-          <label class="feedback-opt-label" style="display: flex; align-items: center; gap: 10px; background-color: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 12px; border-radius: 10px; cursor: pointer; transition: var(--transition-fast);">
-            <input type="radio" name="error-reason" value="technical" style="accent-color: var(--primary);">
-            <div style="display: flex; flex-direction: column;">
-              <strong style="font-size: 0.85rem; color: #FFF;">기술적 분석 노이즈 (Technical Noise)</strong>
-              <span style="font-size: 0.75rem; color: var(--text-muted);">차트 지표 및 변동성 시그널의 일시 교란</span>
-            </div>
-          </label>
-        </div>
-      </div>
-      <div class="modal-footer" style="padding-top: 10px;">
-        <button id="error-modal-btn-cancel" class="btn" style="border-color: var(--border); color: var(--text-muted);">취소</button>
-        <button id="error-modal-btn-submit" class="btn btn-primary">피드백 제출 및 자가최적화</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast alerts -->
-  <div id="toast" class="toast">
-    <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-    </svg>
-    <span id="toast-message">완료되었습니다!</span>
-  </div>
-
-  <!-- Sequential JS Script Loading -->
-  <script src="js/csv-loader.js"></script>
-  <script src="js/scoring.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/app.js"></script>
+  <!-- Script Files Loading (In order of dependency) -->
+  <script src="assets/vendor/chart.min.js"></script>
+  <script src="assets/js/validators.js"></script>
+  <script src="assets/js/calculator.js"></script>
+  <script src="assets/js/formatter.js"></script>
+  <script src="assets/js/csv-loader.js"></script>
+  <script src="assets/js/state.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/charts.js"></script>
+  <script src="assets/js/app.js"></script>
 </body>
 </html>

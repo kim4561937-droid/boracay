@@ -779,6 +779,14 @@ body.light-theme .result-card.warning .result-card-val {
   transition: background-color var(--transition-normal);
 }
 
+.chart-note {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--color-text-dark);
+  text-align: center;
+  line-height: 1.5;
+}
+
 /* Table Section Styles */
 .table-section {
   display: flex;

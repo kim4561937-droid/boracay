@@ -98,22 +98,37 @@
       if (!canvas) return;
 
       const ctx = canvas.getContext('2d');
+      
+      const ip = window.State.inputs;
+      const currentAge = ip.currentAge;
+
+      const currentSavingsStr = window.Formatter.formatToEokMan(ip.monthlySavings);
+      const currentReturnStr = window.Formatter.formatPercent(ip.annualReturnRate);
+      
+      const savingsAdd50Str = window.Formatter.formatToEokMan(ip.monthlySavings + 500000);
+      const savingsAdd100Str = window.Formatter.formatToEokMan(ip.monthlySavings + 1000000);
+      const returnAdd1Str = window.Formatter.formatPercent(ip.annualReturnRate + 0.01);
+      const returnAdd2Str = window.Formatter.formatPercent(ip.annualReturnRate + 0.02);
+
       const labels = [
-        '현재 조건',
-        '저축액 +50만',
-        '저축액 +100만',
-        '수익률 +1%p',
-        '수익률 +2%p'
+        `현재 조건 (저축 ${currentSavingsStr} / ${currentReturnStr})`,
+        `저축액 +50만 (저축 ${savingsAdd50Str} / ${currentReturnStr})`,
+        `저축액 +100만 (저축 ${savingsAdd100Str} / ${currentReturnStr})`,
+        `수익률 +1%p (저축 ${currentSavingsStr} / ${returnAdd1Str})`,
+        `수익률 +2%p (저축 ${currentSavingsStr} / ${returnAdd2Str})`
       ];
 
-      // Draw achievement age. If not achieved, cap at lifeExpectancy for visualization but format tooltip
-      const dataValues = [
-        scenarios.current.achieved ? scenarios.current.age : lifeExpectancy,
-        scenarios.savingsAdd50.achieved ? scenarios.savingsAdd50.age : lifeExpectancy,
-        scenarios.savingsAdd100.achieved ? scenarios.savingsAdd100.age : lifeExpectancy,
-        scenarios.returnAdd1.achieved ? scenarios.returnAdd1.age : lifeExpectancy,
-        scenarios.returnAdd2.achieved ? scenarios.returnAdd2.age : lifeExpectancy
+      // Draw achievement age as floating bar ranges [startAge, endAge]
+      const rawDataValues = [
+        [currentAge, scenarios.current.achieved ? scenarios.current.age : lifeExpectancy],
+        [currentAge, scenarios.savingsAdd50.achieved ? scenarios.savingsAdd50.age : lifeExpectancy],
+        [currentAge, scenarios.savingsAdd100.achieved ? scenarios.savingsAdd100.age : lifeExpectancy],
+        [currentAge, scenarios.returnAdd1.achieved ? scenarios.returnAdd1.age : lifeExpectancy],
+        [currentAge, scenarios.returnAdd2.achieved ? scenarios.returnAdd2.age : lifeExpectancy]
       ];
+
+      const roundToOneDecimal = v => Math.round(v * 10) / 10;
+      const dataValues = rawDataValues.map(range => [range[0], roundToOneDecimal(range[1])]);
 
       const colors = dataValues.map((val, idx) => {
         const achieved = [
@@ -130,8 +145,8 @@
         labels: labels,
         datasets: [
           {
-            label: '예상 달성 나이 (세)',
-            data: dataValues.map(v => Math.round(v * 10) / 10),
+            label: '자산 적립 기간 (세)',
+            data: dataValues,
             backgroundColor: colors,
             borderColor: colors.map(c => c.replace('0.7', '1').replace('0.5', '1')),
             borderWidth: 1.5,
@@ -141,28 +156,39 @@
       };
 
       const options = this.getCommonOptions('시나리오별 달성 시점 비교 (세)');
+      options.indexAxis = 'y';
       
-      // Override Y axis ticks callback to format as Age (세) instead of money (만/억)
-      if (options.scales && options.scales.y && options.scales.y.ticks) {
-        options.scales.y.ticks.callback = function(value) {
-          return value + '세';
-        };
+      // Override scales for horizontal layout
+      if (options.scales) {
+        if (options.scales.x) {
+          options.scales.x.min = currentAge;
+          options.scales.x.max = lifeExpectancy;
+          options.scales.x.ticks = options.scales.x.ticks || {};
+          options.scales.x.ticks.callback = function(value) {
+            return value + '세';
+          };
+        }
+        if (options.scales.y) {
+          options.scales.y.ticks = options.scales.y.ticks || {};
+          delete options.scales.y.ticks.callback; // Clear currency/Eok formatting on scenario labels
+        }
       }
 
-      // Custom tooltip formatting for scenario compare to display "달성 불가" if applicable
+      // Custom tooltip formatting for scenario compare to display ranges and durations
       options.plugins.tooltip.callbacks.label = function(context) {
         const idx = context.dataIndex;
         const key = ['current', 'savingsAdd50', 'savingsAdd100', 'returnAdd1', 'returnAdd2'][idx];
         const scenario = scenarios[key];
         if (scenario.achieved) {
-          return `달성 나이: ${scenario.age.toFixed(1)}세 (남은 기간: ${(scenario.months / 12).toFixed(1)}년)`;
+          return `달성 나이: ${scenario.age.toFixed(1)}세 (적립 기간: ${currentAge}세 ~ ${scenario.age.toFixed(1)}세, ${(scenario.months / 12).toFixed(1)}년)`;
         } else {
-          return `기대수명 내 달성 불가 (시뮬레이션 나이: ${scenario.age.toFixed(1)}세)`;
+          return `기대수명 내 달성 불가 (적립 시뮬레이션 범위: ${currentAge}세 ~ ${lifeExpectancy}세)`;
         }
       };
 
       if (chartScenarioCompare) {
         chartScenarioCompare.data = data;
+        chartScenarioCompare.options = options;
         chartScenarioCompare.update();
       } else {
         chartScenarioCompare = new Chart(ctx, {

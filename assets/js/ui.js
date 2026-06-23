@@ -1,22 +1,26 @@
 /**
- * RetireMap UI Controller Module
- * Connects DOM elements with State, processes inputs, formats inputs on-the-fly,
- * manages validation messaging, tooltip modal, link sharing, and renders outputs.
+ * Financial Freedom Simulator UI Controller Module
+ * Connects DOM elements with State, formats inputs on-the-fly,
+ * manages validation, help tooltip modal, sharing URLs, toggling tables,
+ * and rendering card metrics, summaries, tables, and charts.
  */
 (function() {
   const UI = {
+    // Track which table to show: 'accumulation' or 'sustainability'
+    activeTable: 'accumulation',
+
     /**
      * Bind all DOM event listeners
      */
     bindEvents() {
-      // 1. Core numeric/range inputs
-      const inputIds = [
-        'current-age', 'retire-age', 'life-expectancy',
-        'monthly-expense-now', 'current-assets', 'monthly-pension',
-        'inflation-rate', 'pre-ret-return', 'post-ret-return'
+      // 1. Core numeric/range/currency inputs
+      const inputsMap = [
+        'current-age', 'target-freedom-age', 'life-expectancy',
+        'monthly-expense-now', 'current-assets', 'monthly-savings',
+        'inflation-rate', 'annual-return-rate', 'post-freedom-return-rate'
       ];
 
-      inputIds.forEach(id => {
+      inputsMap.forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
 
@@ -25,13 +29,12 @@
           this.handleInputChange(id, e.target.value);
         });
 
-        // Format currency fields with commas on-the-fly, and handle cursor position
-        if (['monthly-expense-now', 'current-assets', 'monthly-pension'].includes(id)) {
+        // Format currency fields with commas on focus blur
+        if (['monthly-expense-now', 'current-assets', 'monthly-savings'].includes(id)) {
           el.addEventListener('blur', (e) => {
             this.formatInputWithCommas(e.target);
           });
           el.addEventListener('focus', (e) => {
-            // Strip non-numeric when focusing to ease editing
             const num = window.Formatter.normalizeCurrencyInput(e.target.value);
             e.target.value = num === 0 ? '' : num;
           });
@@ -52,11 +55,11 @@
         });
       });
 
-      // 4. Yearly return mode toggle
-      const yearlyReturnToggle = document.getElementById('use-yearly-return');
-      if (yearlyReturnToggle) {
-        yearlyReturnToggle.addEventListener('change', (e) => {
-          window.State.updateInput('useYearlyReturn', e.target.checked);
+      // 4. Reinvest surplus toggle
+      const reinvestToggle = document.getElementById('reinvest-surplus');
+      if (reinvestToggle) {
+        reinvestToggle.addEventListener('change', (e) => {
+          window.State.updateInput('reinvestSurplus', e.target.checked);
           this.render();
         });
       }
@@ -78,15 +81,15 @@
           // Zero out inputs
           window.State.inputs = {
             currentAge: 20,
-            retireAge: 60,
+            targetFreedomAge: 55,
             lifeExpectancy: 90,
             monthlyExpenseNow: 0,
             currentAssets: 0,
-            monthlyPension: 0,
+            monthlySavings: 0,
             inflationRate: 0.025,
-            preRetReturn: 0.06,
-            postRetReturn: 0.03,
-            useYearlyReturn: false
+            annualReturnRate: 0.06,
+            postFreedomReturnRate: 0.03,
+            reinvestSurplus: true
           };
           window.State.scenarioId = 'base';
           window.State.recalculate();
@@ -96,10 +99,25 @@
         });
       }
 
-      // 6. Help modal trigger and close
+      // 6. Table toggle click
+      const btnTableToggle = document.getElementById('btn-table-toggle');
+      if (btnTableToggle) {
+        btnTableToggle.addEventListener('click', () => {
+          if (this.activeTable === 'accumulation') {
+            this.activeTable = 'sustainability';
+            btnTableToggle.textContent = '달성 전 적립 테이블 보기';
+          } else {
+            this.activeTable = 'accumulation';
+            btnTableToggle.textContent = '은퇴 후 자산 테이블 보기';
+          }
+          this.renderTableOnly();
+        });
+      }
+
+      // 7. Help modal trigger and close
       this.bindHelpTriggers();
 
-      // 7. Clipboard and Share buttons
+      // 8. Clipboard copy buttons
       const btnCopySummary = document.getElementById('btn-copy-summary');
       if (btnCopySummary) {
         btnCopySummary.addEventListener('click', () => {
@@ -114,7 +132,7 @@
         });
       }
 
-      // 8. Visualization Tab Switches
+      // 9. Visualization Tab Switch
       const vizTabs = document.querySelectorAll('.viz-tab');
       vizTabs.forEach(tab => {
         tab.addEventListener('click', () => {
@@ -129,13 +147,16 @@
           if (targetPanel) {
             targetPanel.classList.add('active');
           }
+          
+          // Force Chart.js to resize/update the active chart
+          if (window.Charts) {
+            window.Charts.resizeAll();
+          }
         });
       });
 
-      // 9. Theme Toggle (Light/Dark Mode)
+      // 10. Theme Toggle (Light/Dark Mode)
       const btnThemeToggle = document.getElementById('btn-theme-toggle');
-      
-      // Load initial theme from localStorage
       const savedTheme = localStorage.getItem('theme');
       if (savedTheme === 'light') {
         document.body.classList.add('light-theme');
@@ -148,12 +169,14 @@
           localStorage.setItem('theme', isLight ? 'light' : 'dark');
           this.updateThemeUI(isLight);
           
-          // Redraw charts with new theme colors
+          // Redraw charts with new colors
           window.Charts.destroyAll();
           window.Charts.updateAll(
-            window.State.projections.preRetirement,
-            window.State.projections.postRetirement,
-            window.State.results.requiredRetirementAsset
+            window.State.projections.preFreedom,
+            window.State.projections.postFreedom,
+            window.State.results.requiredFreedomAsset,
+            window.State.scenarios,
+            window.State.inputs.lifeExpectancy
           );
         });
       }
@@ -187,20 +210,20 @@
       let value;
       switch (id) {
         case 'current-age':
-        case 'retire-age':
+        case 'target-freedom-age':
         case 'life-expectancy':
           value = parseInt(rawValue, 10);
           window.State.updateInput(this.camelCase(id), isNaN(value) ? 0 : value);
           break;
         case 'monthly-expense-now':
         case 'current-assets':
-        case 'monthly-pension':
+        case 'monthly-savings':
           value = window.Formatter.normalizeCurrencyInput(rawValue);
           window.State.updateInput(this.camelCase(id), value);
           break;
         case 'inflation-rate':
-        case 'pre-ret-return':
-        case 'post-ret-return':
+        case 'annual-return-rate':
+        case 'post-freedom-return-rate':
           value = window.Formatter.normalizePercentInput(rawValue);
           window.State.updateInput(this.camelCase(id), value);
           break;
@@ -216,6 +239,13 @@
     },
 
     /**
+     * Convert camelCase to dash-case
+     */
+    dashCase(str) {
+      return str.replace(/([A-Z])/g, (g) => `-${g[0].toLowerCase()}`);
+    },
+
+    /**
      * On-the-fly currency format helper
      */
     formatInputWithCommas(inputEl) {
@@ -224,25 +254,25 @@
     },
 
     /**
-     * Sync state values back to HTML inputs (e.g. after presets or reset)
+     * Sync state values back to HTML inputs
      */
     syncInputsFromState() {
       document.getElementById('current-age').value = window.State.inputs.currentAge;
-      document.getElementById('retire-age').value = window.State.inputs.retireAge;
+      document.getElementById('target-freedom-age').value = window.State.inputs.targetFreedomAge;
       document.getElementById('life-expectancy').value = window.State.inputs.lifeExpectancy;
 
       document.getElementById('monthly-expense-now').value = window.State.inputs.monthlyExpenseNow > 0 ? 
         window.Formatter.formatComma(window.State.inputs.monthlyExpenseNow) : '';
       document.getElementById('current-assets').value = window.State.inputs.currentAssets > 0 ? 
         window.Formatter.formatComma(window.State.inputs.currentAssets) : '0';
-      document.getElementById('monthly-pension').value = window.State.inputs.monthlyPension > 0 ? 
-        window.Formatter.formatComma(window.State.inputs.monthlyPension) : '0';
+      document.getElementById('monthly-savings').value = window.State.inputs.monthlySavings > 0 ? 
+        window.Formatter.formatComma(window.State.inputs.monthlySavings) : '0';
 
       document.getElementById('inflation-rate').value = (window.State.inputs.inflationRate * 100).toFixed(1);
-      document.getElementById('pre-ret-return').value = (window.State.inputs.preRetReturn * 100).toFixed(1);
-      document.getElementById('post-ret-return').value = (window.State.inputs.postRetReturn * 100).toFixed(1);
+      document.getElementById('annual-return-rate').value = (window.State.inputs.annualReturnRate * 100).toFixed(1);
+      document.getElementById('post-freedom-return-rate').value = (window.State.inputs.postFreedomReturnRate * 100).toFixed(1);
 
-      document.getElementById('use-yearly-return').checked = window.State.inputs.useYearlyReturn;
+      document.getElementById('reinvest-surplus').checked = window.State.inputs.reinvestSurplus;
     },
 
     /**
@@ -310,7 +340,6 @@
       const textContainer = document.getElementById('summary-text');
       if (!textContainer) return;
 
-      // Extract text content only (ignoring HTML tags)
       const text = textContainer.textContent;
       
       navigator.clipboard.writeText(text).then(() => {
@@ -329,16 +358,22 @@
       const ip = window.State.inputs;
       
       params.set('age', ip.currentAge);
-      params.set('retire', ip.retireAge);
+      params.set('target', ip.targetFreedomAge);
       params.set('life', ip.lifeExpectancy);
       params.set('expense', ip.monthlyExpenseNow);
       params.set('assets', ip.currentAssets);
-      params.set('pension', ip.monthlyPension);
+      params.set('savings', ip.monthlySavings);
       params.set('infl', (ip.inflationRate * 100).toFixed(2));
-      params.set('preret', (ip.preRetReturn * 100).toFixed(2));
-      params.set('postret', (ip.postRetReturn * 100).toFixed(2));
+      params.set('rate', (ip.annualReturnRate * 100).toFixed(2));
+      params.set('postrate', (ip.postFreedomReturnRate * 100).toFixed(2));
+      params.set('reinvest', ip.reinvestSurplus);
       
-      const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+      let shareUrl = '';
+      if (window.location.protocol === 'file:') {
+        shareUrl = `https://financial-freedom-simulator.vercel.app/?${params.toString()}`;
+      } else {
+        shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+      }
       
       navigator.clipboard.writeText(shareUrl).then(() => {
         this.showToast('공유 링크가 클립보드에 복사되었습니다.');
@@ -355,7 +390,10 @@
       const toast = document.getElementById('toast');
       if (!toast) return;
 
-      toast.textContent = message;
+      toast.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
+        <span>${message}</span>
+      `;
       if (isError) {
         toast.classList.add('error');
       } else {
@@ -370,124 +408,7 @@
     },
 
     /**
-     * Perform UI updates
-     */
-    render() {
-      // 1. Validation check
-      const validation = window.Validators.validateInputs(window.State.inputs);
-      this.renderValidationMessages(validation);
-
-      // Select active preset scenario tab styling
-      const scenarioTabs = document.querySelectorAll('.scenario-tab');
-      scenarioTabs.forEach(tab => {
-        const id = tab.getAttribute('data-preset');
-        if (id === window.State.scenarioId) {
-          tab.classList.add('active');
-        } else {
-          tab.classList.remove('active');
-        }
-      });
-
-      // Update preset descriptions
-      const descEl = document.getElementById('scenario-desc');
-      if (descEl) {
-        const currentPreset = window.State.meta.scenarioPresets.find(p => p.scenario_id === window.State.scenarioId);
-        descEl.textContent = currentPreset ? currentPreset.description : '사용자 정의 시나리오 활성화됨';
-      }
-
-      if (!validation.isValid) {
-        // Red flag state if input has fatal errors
-        this.lockCalculationUI(true);
-        return;
-      }
-
-      this.lockCalculationUI(false);
-
-      // 2. Update Result Cards
-      const r = window.State.results;
-      const ip = window.State.inputs;
-
-      document.getElementById('val-years-to-retire').textContent = `${r.yearsToRetire}년`;
-      document.getElementById('val-retirement-years').textContent = `${r.retirementYears}년`;
-      document.getElementById('val-future-expense').textContent = window.Formatter.formatToEokMan(r.futureMonthlyExpense);
-      document.getElementById('val-gross-expense').textContent = window.Formatter.formatToEokMan(r.grossRetirementExpense);
-      document.getElementById('val-required-assets').textContent = window.Formatter.formatToEokMan(r.requiredRetirementAsset);
-      
-      const compoundCardVal = document.getElementById('val-savings-compound');
-      if (r.monthlySavingsCompound > 0) {
-        compoundCardVal.textContent = window.Formatter.formatToEokMan(r.monthlySavingsCompound);
-      } else {
-        compoundCardVal.textContent = '0원';
-      }
-
-      // Comparison section (Simple vs Compound details)
-      const pmtDiff = Math.max(0, r.monthlySavingsSimple - r.monthlySavingsCompound);
-      document.getElementById('val-savings-simple').textContent = window.Formatter.formatToEokMan(r.monthlySavingsSimple);
-      document.getElementById('val-savings-diff').textContent = window.Formatter.formatToEokMan(pmtDiff);
-
-      // 3. Render Summary paragraph
-      const summaryTextEl = document.getElementById('summary-text');
-      if (summaryTextEl) {
-        summaryTextEl.innerHTML = window.Formatter.generateSummarySentence(ip, r);
-      }
-
-      // 4. Render Projections Table
-      this.renderProjectionsTable(window.State.projections.preRetirement, r.requiredRetirementAsset);
-
-      // 5. Update Charts
-      window.Charts.updateAll(
-        window.State.projections.preRetirement,
-        window.State.projections.postRetirement,
-        r.requiredRetirementAsset
-      );
-
-      // 6. Update Motivation Card
-      this.updateMotivationCard(r.monthlySavingsCompound);
-    },
-
-    /**
-     * Update the motivation card dynamically with supportive quotes based on savings goal
-     */
-    updateMotivationCard(monthlySavings) {
-      const iconEl = document.getElementById('motivation-icon');
-      const titleEl = document.getElementById('motivation-title');
-      const textEl = document.getElementById('motivation-text');
-      
-      if (!titleEl || !textEl) return;
-
-      let icon = '💡';
-      let title = '경제적 자유 응원 팁';
-      let text = '천 리 길도 한 걸음부터 시작합니다. 지금 작은 시작이 복리의 마법을 만나 큰 자산으로 자라날 것입니다!';
-
-      if (monthlySavings === 0) {
-        icon = '🎉';
-        title = '달성 완료: 완벽한 자산 궤도!';
-        text = '축하합니다! 이미 설정하신 자산과 운용 구조만으로도 목표 연령에 경제적 자유를 충분히 달성할 수 있습니다. 추가 적립 없이 현재 페이스를 유지하며 자산을 여유롭게 굴려보세요!';
-      } else if (monthlySavings <= 500000) {
-        icon = '🌱';
-        title = '성장 씨앗: 한 걸음의 위대한 기적';
-        text = `매달 <strong>${window.Formatter.formatToEokMan(monthlySavings)}</strong>씩 꾸준히 모으는 것은 작은 씨앗처럼 보이지만, 시간이 흐르며 복리의 힘을 빌려 거대한 미래의 나무로 자라날 것입니다. 당신의 성실한 저축을 응원합니다!`;
-      } else if (monthlySavings <= 1500000) {
-        icon = '🚀';
-        title = '자산 가속: 돈이 일하게 하는 비밀';
-        text = `월 약 <strong>${window.Formatter.formatToEokMan(monthlySavings)}</strong>의 적립금은 미래의 당신에게 가장 큰 자유를 선물할 것입니다. "시장의 일시적인 흔들림을 두려워하지 말고, 매달 꾸준히 복리의 스노우볼을 굴리세요."`;
-      } else if (monthlySavings <= 3000000) {
-        icon = '💎';
-        title = '뚜렷한 목표: 방향이 속도보다 중요합니다';
-        text = `월 <strong>${window.Formatter.formatToEokMan(monthlySavings)}</strong>은 다소 큰 금액이지만, 명확한 경제적 독립이라는 가치가 여러분을 이끌어 줄 것입니다. 지출 구조조정이나 추가 파이프라인 구축을 통해 적립률을 조금씩 높여보세요!`;
-      } else {
-        icon = '🔥';
-        title = '페이스 조절: 건강하고 지속 가능한 계획';
-        text = `월 필요 적립액이 <strong>${window.Formatter.formatToEokMan(monthlySavings)}</strong>으로 계산되었습니다. 이 금액이 무겁게 느껴지신다면 경제적 자유 목표 나이를 2~3년 늦추거나 월 필요 생활비를 조정하여 나만의 편안한 계획을 완성해 보세요. 중요한 것은 꺾이지 않고 계속하는 것입니다!`;
-      }
-
-      if (iconEl) iconEl.textContent = icon;
-      titleEl.innerHTML = title;
-      textEl.innerHTML = text;
-    },
-
-    /**
-     * Lock results when input values are erroneous
+     * Lock results when input values are invalid
      */
     lockCalculationUI(shouldLock) {
       const resultsSection = document.getElementById('results-section');
@@ -506,11 +427,10 @@
      * Render validation messaging labels (red error, yellow warning)
      */
     renderValidationMessages(validation) {
-      // Clear previous states
       const fields = [
-        'current-age', 'retire-age', 'life-expectancy',
-        'monthly-expense-now', 'current-assets', 'monthly-pension',
-        'inflation-rate', 'pre-ret-return', 'post-ret-return'
+        'current-age', 'target-freedom-age', 'life-expectancy',
+        'monthly-expense-now', 'current-assets', 'monthly-savings',
+        'inflation-rate', 'annual-return-rate', 'post-freedom-return-rate'
       ];
 
       fields.forEach(field => {
@@ -546,7 +466,7 @@
         const id = this.dashCase(key);
         const msgEl = document.getElementById(`${id}-msg`);
 
-        if (msgEl && !validation.errors[key]) { // error takes priority
+        if (msgEl && !validation.errors[key]) {
           msgEl.classList.add('warning');
           msgEl.style.display = 'flex';
           msgEl.textContent = validation.warnings[key];
@@ -555,48 +475,322 @@
     },
 
     /**
-     * Convert camelCase to dash-case
+     * Update browser URL query parameters in real-time
      */
-    dashCase(str) {
-      return str.replace(/([A-Z])/g, (g) => `-${g[0].toLowerCase()}`);
+    updateURLParams() {
+      const params = new URLSearchParams();
+      const ip = window.State.inputs;
+      
+      params.set('age', ip.currentAge);
+      params.set('target', ip.targetFreedomAge);
+      params.set('life', ip.lifeExpectancy);
+      params.set('expense', ip.monthlyExpenseNow);
+      params.set('assets', ip.currentAssets);
+      params.set('savings', ip.monthlySavings);
+      params.set('infl', (ip.inflationRate * 100).toFixed(2));
+      params.set('rate', (ip.annualReturnRate * 100).toFixed(2));
+      params.set('postrate', (ip.postFreedomReturnRate * 100).toFixed(2));
+      params.set('reinvest', ip.reinvestSurplus);
+      
+      try {
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState({ path: newUrl }, '', newUrl);
+      } catch (e) {
+        console.warn('Real-time URL parameter updates are blocked in this environment.', e);
+      }
     },
 
     /**
-     * Generates table of projections (Pre-retirement accumulation)
+     * Perform UI updates
      */
-    renderProjectionsTable(preRetProjections, requiredAsset) {
-      const tbody = document.getElementById('projection-table-body');
-      if (!tbody) return;
+    render() {
+      // 1. Validation check
+      const validation = window.Validators.validateInputs(window.State.inputs);
+      this.renderValidationMessages(validation);
 
+      // Select active preset scenario tab styling
+      const scenarioTabs = document.querySelectorAll('.scenario-tab');
+      scenarioTabs.forEach(tab => {
+        const id = tab.getAttribute('data-preset');
+        if (id === window.State.scenarioId) {
+          tab.classList.add('active');
+        } else {
+          tab.classList.remove('active');
+        }
+      });
+
+      // Update preset descriptions
+      const descEl = document.getElementById('scenario-desc');
+      if (descEl) {
+        const currentPreset = window.State.meta.scenarioPresets.find(p => p.scenario_id === window.State.scenarioId);
+        descEl.textContent = currentPreset ? currentPreset.description : '사용자 정의 시나리오 활성화됨';
+      }
+
+      if (!validation.isValid) {
+        this.lockCalculationUI(true);
+        return;
+      }
+
+      this.lockCalculationUI(false);
+
+      // 2. Update Result Cards
+      const r = window.State.results;
+      const ip = window.State.inputs;
+      const sc = window.State.scenarios;
+
+      // Card 1: 목표 자산
+      document.getElementById('val-required-assets').textContent = window.Formatter.formatToEokMan(r.requiredFreedomAsset);
+
+      // Card 2: 예상 달성 나이
+      const ageEl = document.getElementById('val-estimated-age');
+      const ageDescEl = document.getElementById('val-estimated-age-desc');
+      if (r.achieved) {
+        ageEl.textContent = `${r.achievedAge.toFixed(1)}세`;
+        ageEl.style.color = '';
+        ageDescEl.textContent = `현재 조건 기준 목표 달성 예상 나이`;
+      } else {
+        ageEl.textContent = '달성 불가';
+        ageEl.style.color = '#f43f5e';
+        ageDescEl.textContent = `기대수명(${ip.lifeExpectancy}세) 내에 달성이 불가능합니다.`;
+      }
+
+      // Card 3: 남은 준비 기간
+      const periodEl = document.getElementById('val-remaining-years');
+      if (r.achieved) {
+        periodEl.textContent = `${r.yearsRemaining.toFixed(1)}년`;
+        document.getElementById('val-remaining-years-desc').textContent = `준비 기한: 약 ${r.achievedMonths}개월`;
+      } else {
+        periodEl.textContent = '-';
+        document.getElementById('val-remaining-years-desc').textContent = '저축/수익 조건 변경이 필요합니다.';
+      }
+
+      // Card 4: 최소 월 저축액
+      document.getElementById('val-min-savings').textContent = window.Formatter.formatToEokMan(r.minMonthlySavings);
+
+      // Card 5: 월 저축액 +50만원 시 효과
+      const savings50El = document.getElementById('val-savings-50-diff');
+      if (r.achieved && sc.savingsAdd50.achieved) {
+        const yearsSaved = r.achievedAge - sc.savingsAdd50.age;
+        if (yearsSaved > 0) {
+          savings50El.textContent = `${yearsSaved.toFixed(1)}년 단축`;
+          savings50El.style.color = '#10b981';
+        } else {
+          savings50El.textContent = '단축 효과 없음';
+          savings50El.style.color = '';
+        }
+      } else if (!r.achieved && sc.savingsAdd50.achieved) {
+        savings50El.textContent = `달성 가능 (${sc.savingsAdd50.age.toFixed(1)}세)`;
+        savings50El.style.color = '#10b981';
+      } else {
+        savings50El.textContent = '-';
+        savings50El.style.color = '';
+      }
+
+      // Card 6: 수익률 +1%p 시 효과
+      const return1El = document.getElementById('val-return-1-diff');
+      if (r.achieved && sc.returnAdd1.achieved) {
+        const yearsSaved = r.achievedAge - sc.returnAdd1.age;
+        if (yearsSaved > 0) {
+          return1El.textContent = `${yearsSaved.toFixed(1)}년 단축`;
+          return1El.style.color = '#10b981';
+        } else {
+          return1El.textContent = '단축 효과 없음';
+          return1El.style.color = '';
+        }
+      } else if (!r.achieved && sc.returnAdd1.achieved) {
+        return1El.textContent = `달성 가능 (${sc.returnAdd1.age.toFixed(1)}세)`;
+        return1El.style.color = '#10b981';
+      } else {
+        return1El.textContent = '-';
+        return1El.style.color = '';
+      }
+
+      // Asset Status Card
+      const statusValueEl = document.getElementById('val-asset-status');
+      const statusDescEl = document.getElementById('val-asset-status-desc');
+      const statusPanel = document.getElementById('sustainability-card-panel');
+
+      statusValueEl.textContent = r.status.name;
+      statusDescEl.textContent = r.status.description;
+
+      if (statusPanel) {
+        statusPanel.classList.remove('warning', 'highlight');
+        statusPanel.style.borderColor = '';
+        
+        if (r.status.status === 'depletion') {
+          statusPanel.style.borderColor = '#f43f5e';
+          statusValueEl.style.color = '#f43f5e';
+        } else if (r.status.status === 'maintenance') {
+          statusPanel.style.borderColor = '#f59e0b';
+          statusValueEl.style.color = '#f59e0b';
+        } else {
+          statusPanel.style.borderColor = '#10b981';
+          statusValueEl.style.color = '#10b981';
+        }
+      }
+
+      // Detail indicators
+      document.getElementById('detail-future-expense').textContent = window.Formatter.formatToEokMan(r.futureMonthlyExpense);
+      document.getElementById('detail-gross-expense').textContent = window.Formatter.formatToEokMan(r.grossFreedomExpense);
+      
+      const lastPreRow = window.State.projections.preFreedom[window.State.projections.preFreedom.length - 1];
+      const finalBalance = lastPreRow ? lastPreRow.endingAsset : ip.currentAssets;
+      document.getElementById('detail-final-balance').textContent = window.Formatter.formatToEokMan(finalBalance);
+
+      const lastPostRow = window.State.projections.postFreedom[window.State.projections.postFreedom.length - 1];
+      const endingAsset = lastPostRow ? lastPostRow.endingAsset : 0;
+      document.getElementById('detail-ending-asset').textContent = window.Formatter.formatToEokMan(endingAsset);
+
+      // 3. Render Summary Text
+      const summaryTextEl = document.getElementById('summary-text');
+      if (summaryTextEl) {
+        summaryTextEl.innerHTML = window.Formatter.generateSummarySentence(ip, r, r.status.name);
+      }
+
+      // 4. Render Table
+      this.renderTableOnly();
+
+      // 5. Update Charts
+      window.Charts.updateAll(
+        window.State.projections.preFreedom,
+        window.State.projections.postFreedom,
+        r.requiredFreedomAsset,
+        r.scenarios,
+        ip.lifeExpectancy
+      );
+
+      // 6. Update Motivation Card
+      this.updateMotivationCard(r.minMonthlySavings, r.achieved);
+
+      // 7. Sync URL query
+      this.updateURLParams();
+    },
+
+    /**
+     * Render the active table only (handles table switching between accumulation & sustainability)
+     */
+    renderTableOnly() {
+      const thead = document.getElementById('projection-table-head');
+      const tbody = document.getElementById('projection-table-body');
+      const tableTitle = document.getElementById('table-title-text');
+      
+      if (!thead || !tbody || !tableTitle) return;
+
+      thead.innerHTML = '';
       tbody.innerHTML = '';
 
-      preRetProjections.forEach((row) => {
-        const tr = document.createElement('tr');
+      if (this.activeTable === 'accumulation') {
+        tableTitle.textContent = '경제적 자율 달성 전 자산 적립 시뮬레이션';
         
-        // Mark retirement start row visually
-        const isRetirementStart = row.yearIndex === preRetProjections.length - 1;
-        if (isRetirementStart) {
-          tr.className = 'retire-row';
-        }
+        thead.innerHTML = `
+          <tr>
+            <th style="text-align: left;">나이</th>
+            <th class="hide-on-mobile">경과년수</th>
+            <th class="hide-on-mobile">누적 저축액</th>
+            <th>누적 자산 (복리)</th>
+            <th>목표 달성률</th>
+          </tr>
+        `;
 
-        // Calculate progress percentage relative to requiredAsset goal
-        let progressPercent = 0;
-        if (requiredAsset > 0) {
-          progressPercent = Math.min(100, (row.endBalanceCompound / requiredAsset) * 100);
+        const preProjections = window.State.projections.preFreedom;
+        const requiredAsset = window.State.results.requiredFreedomAsset;
+
+        preProjections.forEach(row => {
+          const tr = document.createElement('tr');
+          const isAchievementYear = row.yearIndex === preProjections.length - 1 && window.State.results.achieved;
+          
+          if (isAchievementYear) {
+            tr.className = 'retire-row';
+          }
+
+          let progressPercent = 0;
+          if (requiredAsset > 0) {
+            progressPercent = Math.min(100, (row.endingAsset / requiredAsset) * 100);
+          } else {
+            progressPercent = 100;
+          }
+
+          tr.innerHTML = `
+            <td style="text-align: left;"><strong>${row.age}세</strong></td>
+            <td class="hide-on-mobile">${row.yearIndex === 0 ? '시작' : `${row.yearIndex}년차`}</td>
+            <td class="num-col hide-on-mobile">${window.Formatter.formatToEokMan(row.cumulativeSavings)}</td>
+            <td class="num-col font-bold" style="color: ${isAchievementYear ? '#10b981' : ''}">${window.Formatter.formatToEokMan(row.endingAsset)}</td>
+            <td class="num-col font-bold">${progressPercent.toFixed(1)}%</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+      } else {
+        tableTitle.textContent = '경제적 자율 달성 후 자산 유지/소진 시뮬레이션';
+
+        thead.innerHTML = `
+          <tr>
+            <th style="text-align: left;">나이</th>
+            <th class="hide-on-mobile">경과년수</th>
+            <th>연초 자산</th>
+            <th class="hide-on-mobile">연간 수익</th>
+            <th>연간 생활비</th>
+            <th>연말 자산</th>
+          </tr>
+        `;
+
+        const postProjections = window.State.projections.postFreedom;
+
+        postProjections.forEach(row => {
+          const tr = document.createElement('tr');
+          
+          // If asset is depleted, give it a warning row color
+          if (row.endingAsset <= 0) {
+            tr.style.color = '#f43f5e';
+          }
+
+          tr.innerHTML = `
+            <td style="text-align: left;"><strong>${row.age}세</strong></td>
+            <td class="hide-on-mobile">${row.yearIndex === 0 ? '달성시점' : `${row.yearIndex}년차`}</td>
+            <td class="num-col">${window.Formatter.formatToEokMan(row.startingAsset)}</td>
+            <td class="num-col hide-on-mobile">${row.yearIndex === 0 ? '-' : window.Formatter.formatToEokMan(row.annualReturn)}</td>
+            <td class="num-col" style="color: #f43f5e;">${row.yearIndex === 0 ? '-' : window.Formatter.formatToEokMan(row.annualExpense)}</td>
+            <td class="num-col font-bold">${window.Formatter.formatToEokMan(row.endingAsset)}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+    },
+
+    /**
+     * Update the motivation card dynamically with supportive quotes
+     */
+    updateMotivationCard(minMonthlySavings, achieved) {
+      const iconEl = document.getElementById('motivation-icon');
+      const titleEl = document.getElementById('motivation-title');
+      const textEl = document.getElementById('motivation-text');
+      
+      if (!titleEl || !textEl) return;
+
+      let icon = '💡';
+      let title = '자율 주행 응원 메시지';
+      let text = '';
+
+      if (!achieved) {
+        icon = '🔥';
+        title = '현실적인 가이드라인: 페이스 조정 필요';
+        text = `현재 저축액 및 수익률 가정으로는 기대수명 전에 목표자산 달성이 불가능합니다. <strong>목표 달성을 위해서는 최소 월 ${window.Formatter.formatToEokMan(minMonthlySavings)}을 복리로 저축</strong>하시거나, 은퇴 나이를 늦추고, 생활비를 절약하는 구조적 변화를 고려해야 합니다.`;
+      } else {
+        const ip = window.State.inputs;
+        if (ip.monthlySavings >= minMonthlySavings) {
+          icon = '🎉';
+          title = '우수한 저축 페이스: 안정 궤도 진입!';
+          text = `현재 월 저축액(<strong>${window.Formatter.formatToEokMan(ip.monthlySavings)}</strong>)이 목표 연령 달성에 필요한 최소 저축액(<strong>${window.Formatter.formatToEokMan(minMonthlySavings)}</strong>)을 초과하고 있습니다! 지금 상태를 유지하면 목표보다 이른 시점에 경제적 독립을 달성할 수 있습니다.`;
         } else {
-          progressPercent = 100;
+          icon = '🚀';
+          title = '저축 가속 제안: 2% 부족한 스노우볼';
+          text = `현재 페이스로는 달성 나이가 다소 지연됩니다. 매월 저축액을 약 <strong>${window.Formatter.formatToEokMan(minMonthlySavings - ip.monthlySavings)}</strong>만큼만 더 증액하시면 목표 나이(${ip.targetFreedomAge}세)에 완벽하게 도달할 수 있습니다. 복리의 힘을 빌려보세요!`;
         }
+      }
 
-        const ageCol = `<td><strong>${row.age}세</strong></td>`;
-        const yearCol = `<td class="hide-on-mobile">${row.yearIndex === 0 ? '시작' : `${row.yearIndex}년차`}</td>`;
-        const accumContributionCol = `<td class="num-col hide-on-mobile">${window.Formatter.formatToEokMan(row.annualContribution)}</td>`;
-        const endBalanceCol = `<td class="num-col text-emerald-400 font-bold" style="color: ${isRetirementStart ? '#34d399' : ''}">${window.Formatter.formatToEokMan(row.endBalanceCompound)}</td>`;
-        const endBalanceSimpleCol = `<td class="num-col text-amber-500 hide-on-mobile">${window.Formatter.formatToEokMan(row.endBalanceSimple)}</td>`;
-        const progressCol = `<td class="num-col font-bold">${progressPercent.toFixed(1)}%</td>`;
-
-        tr.innerHTML = `${ageCol}${yearCol}${accumContributionCol}${endBalanceCol}${endBalanceSimpleCol}${progressCol}`;
-        tbody.appendChild(tr);
-      });
+      if (iconEl) iconEl.textContent = icon;
+      titleEl.innerHTML = title;
+      textEl.innerHTML = text;
     }
   };
 

@@ -1,4 +1,4 @@
-scenario_id,scenario_name,pre_ret_return,post_ret_return,inflation_default,description
-conservative,보수적,0.04,0.03,0.02,낮은 기대수익률 기준
-base,기준,0.06,0.03,0.025,일반적인 장기 기대수익률 기준
-optimistic,낙관적,0.08,0.03,0.03,높은 기대수익률 기준
+scenario_id,scenario_name,annual_return,post_return,inflation,description
+conservative,보수적,0.04,0.03,0.02,보수적 시나리오
+base,기준,0.06,0.03,0.025,기준 시나리오
+optimistic,낙관적,0.08,0.04,0.03,낙관적 시나리오

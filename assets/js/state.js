@@ -1,21 +1,21 @@
 /**
- * RetireMap State Management Module
- * Holds current inputs, results, presets, and triggers calculations.
+ * Financial Freedom Simulator State Management Module
+ * Holds inputs, results, presets, and triggers calculation logic.
  */
 (function() {
   const State = {
-    // Current input parameters
+    // Current input parameters (Default values as specified in Section 15)
     inputs: {
       currentAge: 40,
-      retireAge: 60,
+      targetFreedomAge: 55,
       lifeExpectancy: 90,
       monthlyExpenseNow: 3500000,
       currentAssets: 100000000,
-      monthlyPension: 1200000,
+      monthlySavings: 2000000,
       inflationRate: 0.025,
-      preRetReturn: 0.06,
-      postRetReturn: 0.03,
-      useYearlyReturn: false
+      annualReturnRate: 0.06,
+      postFreedomReturnRate: 0.03,
+      reinvestSurplus: true
     },
 
     // Current active scenario id
@@ -23,41 +23,47 @@
 
     // Calculated outcomes
     results: {
-      yearsToRetire: 20,
-      retirementYears: 30,
+      yearsToTarget: 15,
+      postFreedomYears: 35,
       futureMonthlyExpense: 0,
-      grossRetirementExpense: 0,
-      requiredRetirementAsset: 0,
-      monthlySavingsCompound: 0,
-      monthlySavingsSimple: 0
+      grossFreedomExpense: 0,
+      requiredFreedomAsset: 0,
+      minMonthlySavings: 0,
+      achieved: true,
+      achievedAge: 0,
+      achievedMonths: 0,
+      yearsRemaining: 0,
+      status: { status: 'maintenance', name: '자산 유지형', description: '' }
     },
 
     // Projections arrays
     projections: {
-      preRetirement: [],
-      postRetirement: []
+      preFreedom: [],
+      postFreedom: []
     },
+
+    // Comparison scenarios (for charts & card values)
+    scenarios: {},
 
     // Loaded configuration data from CSV
     meta: {
       scenarioPresets: [],
       helpTexts: {},
-      yearlyReturnSamples: []
+      exampleInputs: []
     },
 
     /**
      * Initialize state with metadata loaded from CSV files
      */
-    init(presets, helpTextsArray, yearlyReturnsArray) {
+    init(presets, helpTextsArray, exampleInputsArray) {
       this.meta.scenarioPresets = presets;
       
-      // Convert helpTextsArray to a map for easy lookup
       this.meta.helpTexts = {};
       helpTextsArray.forEach(item => {
         this.meta.helpTexts[item.key] = item;
       });
 
-      this.meta.yearlyReturnSamples = yearlyReturnsArray;
+      this.meta.exampleInputs = exampleInputsArray;
 
       // Load base scenario values by default
       this.applyScenarioPreset('base');
@@ -71,31 +77,30 @@
       const preset = this.meta.scenarioPresets.find(p => p.scenario_id === presetId);
       
       if (preset) {
-        this.inputs.preRetReturn = parseFloat(preset.pre_ret_return);
-        this.inputs.postRetReturn = parseFloat(preset.post_ret_return);
-        this.inputs.inflationRate = parseFloat(preset.inflation_default);
+        this.inputs.annualReturnRate = parseFloat(preset.annual_return);
+        this.inputs.postFreedomReturnRate = parseFloat(preset.post_return);
+        this.inputs.inflationRate = parseFloat(preset.inflation);
       }
       
       this.recalculate();
     },
 
     /**
-     * Set input values manually (flags as custom scenario if preRet/postRet/inflation values differ from preset)
+     * Set input values manually (flags as custom scenario if values differ from preset)
      */
     updateInput(key, value) {
       this.inputs[key] = value;
       
-      // If we modify preRetReturn, postRetReturn, or inflationRate, check if it matches a preset
-      if (['preRetReturn', 'postRetReturn', 'inflationRate'].includes(key)) {
+      if (['annualReturnRate', 'postFreedomReturnRate', 'inflationRate'].includes(key)) {
         let matchedId = 'custom';
         for (const preset of this.meta.scenarioPresets) {
-          const preRet = parseFloat(preset.pre_ret_return);
-          const postRet = parseFloat(preset.post_ret_return);
-          const infl = parseFloat(preset.inflation_default);
+          const annualRet = parseFloat(preset.annual_return);
+          const postRet = parseFloat(preset.post_return);
+          const infl = parseFloat(preset.inflation);
           
           if (
-            Math.abs(this.inputs.preRetReturn - preRet) < 0.0001 &&
-            Math.abs(this.inputs.postRetReturn - postRet) < 0.0001 &&
+            Math.abs(this.inputs.annualReturnRate - annualRet) < 0.0001 &&
+            Math.abs(this.inputs.postFreedomReturnRate - postRet) < 0.0001 &&
             Math.abs(this.inputs.inflationRate - infl) < 0.0001
           ) {
             matchedId = preset.scenario_id;
@@ -112,115 +117,138 @@
      * Reset inputs to default example values
      */
     resetToDefault() {
-      this.inputs = {
-        currentAge: 40,
-        retireAge: 60,
-        lifeExpectancy: 90,
-        monthlyExpenseNow: 3500000,
-        currentAssets: 100000000,
-        monthlyPension: 1200000,
-        inflationRate: 0.025,
-        preRetReturn: 0.06,
-        postRetReturn: 0.03,
-        useYearlyReturn: false
-      };
+      // Find default inputs in parsed CSV or fallback to standard default values
+      const def = this.meta.exampleInputs.find(e => e.example_id === 'default');
+      if (def) {
+        this.inputs = {
+          currentAge: parseInt(def.current_age, 10),
+          targetFreedomAge: parseInt(def.target_age, 10),
+          lifeExpectancy: parseInt(def.life_expectancy, 10),
+          monthlyExpenseNow: parseFloat(def.monthly_expense),
+          currentAssets: parseFloat(def.current_assets),
+          monthlySavings: parseFloat(def.monthly_savings),
+          inflationRate: parseFloat(def.inflation),
+          annualReturnRate: parseFloat(def.annual_return),
+          postFreedomReturnRate: parseFloat(def.post_return),
+          reinvestSurplus: true
+        };
+      } else {
+        this.inputs = {
+          currentAge: 40,
+          targetFreedomAge: 55,
+          lifeExpectancy: 90,
+          monthlyExpenseNow: 3500000,
+          currentAssets: 100000000,
+          monthlySavings: 2000000,
+          inflationRate: 0.025,
+          annualReturnRate: 0.06,
+          postFreedomReturnRate: 0.03,
+          reinvestSurplus: true
+        };
+      }
       this.scenarioId = 'base';
       this.recalculate();
     },
 
     /**
-     * Run financial calculations and update state results
+     * Run calculations and update state results and projections
      */
     recalculate() {
-      // 1. Timeframes
-      const yearsToRetire = window.Calculator.calculateYearsToRetire(this.inputs.currentAge, this.inputs.retireAge);
-      const retirementYears = window.Calculator.calculateRetirementYears(this.inputs.retireAge, this.inputs.lifeExpectancy);
+      const ip = this.inputs;
 
-      // 2. Future expenses
+      // 1. Calculate timeframes
+      const yearsToTarget = Math.max(0, ip.targetFreedomAge - ip.currentAge);
+      const postFreedomYears = Math.max(0, ip.lifeExpectancy - ip.targetFreedomAge);
+
+      // 2. Calculate expenses at target age
       const futureMonthlyExpense = window.Calculator.calculateFutureMonthlyExpense(
-        this.inputs.monthlyExpenseNow,
-        this.inputs.inflationRate,
-        yearsToRetire
+        ip.monthlyExpenseNow,
+        ip.inflationRate,
+        yearsToTarget
       );
 
-      const grossRetirementExpense = window.Calculator.calculateGrossRetirementExpense(
+      const grossFreedomExpense = window.Calculator.calculateGrossFreedomExpense(
         futureMonthlyExpense,
-        this.inputs.inflationRate,
-        retirementYears
+        ip.inflationRate,
+        postFreedomYears
       );
 
-      // 3. Required assets (discounted net expenses)
-      const requiredRetirementAsset = window.Calculator.calculateRequiredRetirementAsset({
+      // 3. Calculate required freedom asset
+      const requiredFreedomAsset = window.Calculator.calculateRequiredFreedomAsset(
         futureMonthlyExpense,
-        inflationRate: this.inputs.inflationRate,
-        postRetReturn: this.inputs.postRetReturn,
-        monthlyPension: this.inputs.monthlyPension,
-        retirementYears
+        ip.inflationRate,
+        ip.postFreedomReturnRate,
+        postFreedomYears
+      );
+
+      // 4. Calculate min monthly savings to hit target asset at targetFreedomAge
+      const minMonthlySavings = window.Calculator.calculateMinMonthlySavings(
+        requiredFreedomAsset,
+        ip.currentAssets,
+        ip.annualReturnRate,
+        yearsToTarget
+      );
+
+      // 5. Simulate achievement age under current conditions
+      const baseSimulation = window.Calculator.simulateAssetGrowth({
+        currentAge: ip.currentAge,
+        currentAssets: ip.currentAssets,
+        monthlySavings: ip.monthlySavings,
+        annualReturnRate: ip.annualReturnRate,
+        requiredAsset: requiredFreedomAsset,
+        maxAge: ip.lifeExpectancy
       });
 
-      // 4. Savings rates (preRetReturn changes if useYearlyReturn is active)
-      // Note: CSV yearly return mode is calculated as an average or simulated sequentially.
-      // For MVP, if useYearlyReturn is ON, we'll calculate the geometric mean return of yearlyReturnSamples.
-      let effectivePreReturn = this.inputs.preRetReturn;
-      if (this.inputs.useYearlyReturn && this.meta.yearlyReturnSamples.length > 0) {
-        // Geometric mean: (pi (1+r_i))^(1/n) - 1
-        let product = 1;
-        this.meta.yearlyReturnSamples.forEach(sample => {
-          product *= (1 + parseFloat(sample.annual_return));
-        });
-        effectivePreReturn = Math.pow(product, 1 / this.meta.yearlyReturnSamples.length) - 1;
-      }
+      // 6. Simulate other comparison scenarios
+      const scenarios = window.Calculator.calculateScenarios(ip, requiredFreedomAsset);
 
-      const monthlySavingsCompound = window.Calculator.calculateMonthlySavingsCompound({
-        requiredRetirementAsset,
-        currentAssets: this.inputs.currentAssets,
-        preRetReturn: effectivePreReturn,
-        yearsToRetire
+      // 7. Generate pre-freedom projections
+      const preFreedomProjections = window.Calculator.generatePreFreedomProjection(
+        ip,
+        baseSimulation.achieved ? baseSimulation.months : (ip.lifeExpectancy - ip.currentAge) * 12
+      );
+
+      // 8. Generate post-freedom projections starting from actual achievement or target freedom age
+      const startAge = baseSimulation.achieved ? baseSimulation.age : ip.targetFreedomAge;
+      const startingAsset = baseSimulation.achieved ? baseSimulation.finalBalance : requiredFreedomAsset;
+
+      const postFreedomProjections = window.Calculator.generatePostFreedomProjection({
+        startAge,
+        lifeExpectancy: ip.lifeExpectancy,
+        startingAsset,
+        postFreedomReturnRate: ip.postFreedomReturnRate,
+        inflationRate: ip.inflationRate,
+        currentMonthlyExpense: ip.monthlyExpenseNow,
+        currentAge: ip.currentAge,
+        reinvestSurplus: ip.reinvestSurplus
       });
 
-      const monthlySavingsSimple = window.Calculator.calculateMonthlySavingsSimple({
-        requiredRetirementAsset,
-        currentAssets: this.inputs.currentAssets,
-        preRetReturn: effectivePreReturn,
-        yearsToRetire
-      });
+      // 9. Determine sustainability status
+      const lastRow = postFreedomProjections[postFreedomProjections.length - 1];
+      const finalAsset = lastRow ? lastRow.endingAsset : 0;
+      const status = window.Calculator.determineAssetStatus(startingAsset, finalAsset, postFreedomProjections);
 
-      // Update state results
+      // Write results to state
       this.results = {
-        yearsToRetire,
-        retirementYears,
+        yearsToTarget,
+        postFreedomYears,
         futureMonthlyExpense,
-        grossRetirementExpense,
-        requiredRetirementAsset,
-        monthlySavingsCompound,
-        monthlySavingsSimple
+        grossFreedomExpense,
+        requiredFreedomAsset,
+        minMonthlySavings,
+        achieved: baseSimulation.achieved,
+        achievedAge: baseSimulation.age,
+        achievedMonths: baseSimulation.months,
+        yearsRemaining: baseSimulation.months / 12,
+        status
       };
 
-      // 5. Generate Projections
-      this.projections.preRetirement = window.Calculator.generatePreRetirementProjection({
-        currentAge: this.inputs.currentAge,
-        yearsToRetire,
-        currentAssets: this.inputs.currentAssets,
-        preRetReturn: effectivePreReturn,
-        monthlySavingsCompound,
-        monthlySavingsSimple
-      });
+      this.scenarios = scenarios;
 
-      const preRetLen = this.projections.preRetirement.length;
-      const lastPreRet = this.projections.preRetirement[preRetLen - 1];
-      const startingAssetCompound = lastPreRet ? lastPreRet.endBalanceCompound : requiredRetirementAsset;
-      const startingAssetSimple = lastPreRet ? lastPreRet.endBalanceSimple : requiredRetirementAsset;
-
-      this.projections.postRetirement = window.Calculator.generatePostRetirementProjection({
-        retireAge: this.inputs.retireAge,
-        retirementYears,
-        startingAssetCompound,
-        startingAssetSimple,
-        postRetReturn: this.inputs.postRetReturn,
-        inflationRate: this.inputs.inflationRate,
-        futureMonthlyExpense,
-        monthlyPension: this.inputs.monthlyPension
-      });
+      this.projections = {
+        preFreedom: preFreedomProjections,
+        postFreedom: postFreedomProjections
+      };
     }
   };
 

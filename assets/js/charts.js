@@ -1,18 +1,18 @@
 /**
- * RetireMap Charts Module
- * Configures and updates Chart.js instances with custom premium dark-theme styling.
+ * Financial Freedom Simulator Charts Module
+ * Configures and updates Chart.js instances with premium styling.
  */
 (function() {
   let chartAssetGrowth = null;
-  let chartSimpleVsCompound = null;
+  let chartScenarioCompare = null;
   let chartAssetDepletion = null;
 
   // Premium colors
   const COLOR_EMERALD = '#10b981';
   const COLOR_AMBER = '#f59e0b';
-  const COLOR_INDIGO = '#6366f1';
+  const COLOR_INDIGO = '#8b5cf6';
   const COLOR_BLUE = '#3b82f6';
-  const COLOR_GRID = 'rgba(255, 255, 255, 0.06)';
+  const COLOR_ROSE = '#f43f5e';
   const COLOR_TEXT = '#94a3b8';
 
   const Charts = {
@@ -28,37 +28,36 @@
     },
 
     /**
-     * Destroy charts if they exist to prevent memory leaks or overlay issues
+     * Destroy charts to prevent memory leaks or overlay bugs
      */
     destroyAll() {
       if (chartAssetGrowth) { chartAssetGrowth.destroy(); chartAssetGrowth = null; }
-      if (chartSimpleVsCompound) { chartSimpleVsCompound.destroy(); chartSimpleVsCompound = null; }
+      if (chartScenarioCompare) { chartScenarioCompare.destroy(); chartScenarioCompare = null; }
       if (chartAssetDepletion) { chartAssetDepletion.destroy(); chartAssetDepletion = null; }
     },
 
     /**
-     * Initialize/Update Pre-Retirement Asset Growth Chart
+     * Render Pre-Freedom Asset Growth Chart (Chart 1)
      */
-    renderAssetGrowth(canvasId, preRetProjections, requiredAsset) {
+    renderAssetGrowth(canvasId, preFreedomProjections, requiredAsset) {
       const canvas = document.getElementById(canvasId);
       if (!canvas) return;
       
       const ctx = canvas.getContext('2d');
-      const ages = preRetProjections.map(p => `${p.age}세`);
-      const compoundData = preRetProjections.map(p => Math.round(p.endBalanceCompound / 10000)); // 만원 단위
-      const simpleData = preRetProjections.map(p => Math.round(p.endBalanceSimple / 10000));
-      const targetData = preRetProjections.map(() => Math.round(requiredAsset / 10000));
+      const ages = preFreedomProjections.map(p => `${p.age}세`);
+      const assetData = preFreedomProjections.map(p => Math.round(p.endingAsset / 10000)); // 만원 단위
+      const targetLineData = preFreedomProjections.map(() => Math.round(requiredAsset / 10000));
 
-      const gradientCompound = this.createGradient(ctx, 'rgba(16, 185, 129, 0.25)', 'rgba(16, 185, 129, 0.00)');
+      const gradientGrowth = this.createGradient(ctx, 'rgba(16, 185, 129, 0.25)', 'rgba(16, 185, 129, 0.00)');
 
       const data = {
         labels: ages,
         datasets: [
           {
-            label: '복리 적립 (실제 계획)',
-            data: compoundData,
+            label: '자산 성장 곡선',
+            data: assetData,
             borderColor: COLOR_EMERALD,
-            backgroundColor: gradientCompound || 'rgba(16, 185, 129, 0.1)',
+            backgroundColor: gradientGrowth || 'rgba(16, 185, 129, 0.1)',
             borderWidth: 3,
             fill: true,
             tension: 0.2,
@@ -66,18 +65,8 @@
             pointBackgroundColor: COLOR_EMERALD
           },
           {
-            label: '단리 적립 (교육용)',
-            data: simpleData,
-            borderColor: COLOR_AMBER,
-            borderWidth: 2,
-            borderDash: [4, 4],
-            fill: false,
-            tension: 0.1,
-            pointRadius: 0
-          },
-          {
-            label: '목표 경제적 자유 자산',
-            data: targetData,
+            label: '목표자산 기준선',
+            data: targetLineData,
             borderColor: COLOR_INDIGO,
             borderWidth: 2,
             borderDash: [6, 6],
@@ -96,99 +85,115 @@
         chartAssetGrowth = new Chart(ctx, {
           type: 'line',
           data: data,
-          options: this.getCommonOptions('경제적 자유 달성 전 자산 누적 시뮬레이션 (만원)')
+          options: this.getCommonOptions('목표자산 달성 시뮬레이션 (만원)')
         });
       }
     },
 
     /**
-     * Initialize/Update Simple vs Compound Comparison Chart
+     * Render Scenario Compare Chart (Chart 2)
      */
-    renderSimpleVsCompound(canvasId, preRetProjections) {
+    renderScenarioCompare(canvasId, scenarios, lifeExpectancy) {
       const canvas = document.getElementById(canvasId);
       if (!canvas) return;
 
       const ctx = canvas.getContext('2d');
-      const years = preRetProjections.map(p => `${p.yearIndex}년차`);
-      const compoundData = preRetProjections.map(p => Math.round(p.endBalanceCompound / 10000));
-      const simpleData = preRetProjections.map(p => Math.round(p.endBalanceSimple / 10000));
+      const labels = [
+        '현재 조건',
+        '저축액 +50만',
+        '저축액 +100만',
+        '수익률 +1%p',
+        '수익률 +2%p'
+      ];
 
-      // Bar Chart for simple comparison or a side-by-side area chart
+      // Draw achievement age. If not achieved, cap at lifeExpectancy for visualization but format tooltip
+      const dataValues = [
+        scenarios.current.achieved ? scenarios.current.age : lifeExpectancy,
+        scenarios.savingsAdd50.achieved ? scenarios.savingsAdd50.age : lifeExpectancy,
+        scenarios.savingsAdd100.achieved ? scenarios.savingsAdd100.age : lifeExpectancy,
+        scenarios.returnAdd1.achieved ? scenarios.returnAdd1.age : lifeExpectancy,
+        scenarios.returnAdd2.achieved ? scenarios.returnAdd2.age : lifeExpectancy
+      ];
+
+      const colors = dataValues.map((val, idx) => {
+        const achieved = [
+          scenarios.current.achieved,
+          scenarios.savingsAdd50.achieved,
+          scenarios.savingsAdd100.achieved,
+          scenarios.returnAdd1.achieved,
+          scenarios.returnAdd2.achieved
+        ][idx];
+        return achieved ? 'rgba(139, 92, 246, 0.7)' : 'rgba(244, 63, 94, 0.5)'; // purple if achieved, red warning if not
+      });
+
       const data = {
-        labels: years,
+        labels: labels,
         datasets: [
           {
-            label: '복리 누적자산',
-            data: compoundData,
-            borderColor: COLOR_EMERALD,
-            backgroundColor: 'rgba(16, 185, 129, 0.4)',
+            label: '예상 달성 나이 (세)',
+            data: dataValues.map(v => Math.round(v * 10) / 10),
+            backgroundColor: colors,
+            borderColor: colors.map(c => c.replace('0.7', '1').replace('0.5', '1')),
             borderWidth: 1.5,
-            borderRadius: 4,
-            fill: true
-          },
-          {
-            label: '단리 누적자산',
-            data: simpleData,
-            borderColor: COLOR_AMBER,
-            backgroundColor: 'rgba(245, 158, 11, 0.4)',
-            borderWidth: 1.5,
-            borderRadius: 4,
-            fill: true
+            borderRadius: 6
           }
         ]
       };
 
-      if (chartSimpleVsCompound) {
-        chartSimpleVsCompound.data = data;
-        chartSimpleVsCompound.update();
+      const options = this.getCommonOptions('시나리오별 달성 시점 비교 (세)');
+      // Custom tooltip formatting for scenario compare to display "달성 불가" if applicable
+      options.plugins.tooltip.callbacks.label = function(context) {
+        const idx = context.dataIndex;
+        const key = ['current', 'savingsAdd50', 'savingsAdd100', 'returnAdd1', 'returnAdd2'][idx];
+        const scenario = scenarios[key];
+        if (scenario.achieved) {
+          return `달성 나이: ${scenario.age.toFixed(1)}세 (남은 기간: ${(scenario.months / 12).toFixed(1)}년)`;
+        } else {
+          return `기대수명 내 달성 불가 (시뮬레이션 나이: ${scenario.age.toFixed(1)}세)`;
+        }
+      };
+
+      if (chartScenarioCompare) {
+        chartScenarioCompare.data = data;
+        chartScenarioCompare.update();
       } else {
-        chartSimpleVsCompound = new Chart(ctx, {
+        chartScenarioCompare = new Chart(ctx, {
           type: 'bar',
           data: data,
-          options: this.getCommonOptions('연도별 단리 vs 복리 자산 규모 비교 (만원)')
+          options: options
         });
       }
     },
 
     /**
-     * Initialize/Update Post-Financial Freedom Asset Trajectory Chart
+     * Render Post-Freedom Asset Trajectory Chart (Chart 3)
      */
-    renderAssetDepletion(canvasId, postRetProjections) {
+    renderAssetDepletion(canvasId, postFreedomProjections) {
       const canvas = document.getElementById(canvasId);
       if (!canvas) return;
 
       const ctx = canvas.getContext('2d');
-      const ages = postRetProjections.map(p => `${p.age}세`);
-      const endingBalanceCompoundData = postRetProjections.map(p => Math.round(p.endingBalanceCompound / 10000));
-      const endingBalanceSimpleData = postRetProjections.map(p => Math.round(p.endingBalanceSimple / 10000));
+      const ages = postFreedomProjections.map(p => `${p.age}세`);
+      const endingAssets = postFreedomProjections.map(p => Math.round(p.endingAsset / 10000));
 
-      const gradientCompound = this.createGradient(ctx, 'rgba(59, 130, 246, 0.25)', 'rgba(59, 130, 246, 0.00)');
-      const gradientSimple = this.createGradient(ctx, 'rgba(245, 158, 11, 0.15)', 'rgba(245, 158, 11, 0.00)');
+      const isDepleting = endingAssets[endingAssets.length - 1] < endingAssets[0] * 0.9;
+      const themeColor = isDepleting ? COLOR_ROSE : COLOR_BLUE;
+      const themeBg = isDepleting ? 'rgba(244, 63, 94, 0.2)' : 'rgba(59, 130, 246, 0.2)';
+      const gradient = this.createGradient(ctx, themeBg, 'rgba(0, 0, 0, 0)');
 
       const data = {
         labels: ages,
         datasets: [
           {
-            label: '복리 자산 추이 (성장/소진)',
-            data: endingBalanceCompoundData,
-            borderColor: COLOR_BLUE,
-            backgroundColor: gradientCompound || 'rgba(59, 130, 246, 0.1)',
+            label: '자산 잔액 추이',
+            data: endingAssets,
+            borderColor: themeColor,
+            backgroundColor: gradient || themeBg,
             borderWidth: 3,
             fill: true,
             tension: 0.1,
             pointRadius: ages.length > 20 ? 1 : 3,
-            pointBackgroundColor: COLOR_BLUE
-          },
-          {
-            label: '단리 자산 추이 (성장/소진)',
-            data: endingBalanceSimpleData,
-            borderColor: COLOR_AMBER,
-            backgroundColor: gradientSimple || 'rgba(245, 158, 11, 0.05)',
-            borderWidth: 2,
-            borderDash: [4, 4],
-            fill: true,
-            tension: 0.1,
-            pointRadius: 0
+            pointBackgroundColor: themeColor
           }
         ]
       };
@@ -200,22 +205,33 @@
         chartAssetDepletion = new Chart(ctx, {
           type: 'line',
           data: data,
-          options: this.getCommonOptions('경제적 자유 달성 후 연도별 자산 추이 (만원)')
+          options: this.getCommonOptions('경제적 자율 달성 후 자산 추이 (만원)')
         });
       }
     },
 
     /**
-     * Helper to update all charts at once
+     * Update all charts
      */
-    updateAll(preRetProjections, postRetProjections, requiredAsset) {
-      this.renderAssetGrowth('chart-growth', preRetProjections, requiredAsset);
-      this.renderSimpleVsCompound('chart-compare', preRetProjections);
-      this.renderAssetDepletion('chart-depletion', postRetProjections);
+    updateAll(preFreedomProjections, postFreedomProjections, requiredAsset, scenarios, lifeExpectancy) {
+      this.renderAssetGrowth('chart-growth', preFreedomProjections, requiredAsset);
+      if (scenarios && Object.keys(scenarios).length > 0) {
+        this.renderScenarioCompare('chart-compare', scenarios, lifeExpectancy);
+      }
+      this.renderAssetDepletion('chart-depletion', postFreedomProjections);
     },
 
     /**
-     * Get baseline chart configuration options for premium dark/light mode look
+     * Force Chart.js instances to resize and adjust to visible container boundaries
+     */
+    resizeAll() {
+      if (chartAssetGrowth) { chartAssetGrowth.resize(); }
+      if (chartScenarioCompare) { chartScenarioCompare.resize(); }
+      if (chartAssetDepletion) { chartAssetDepletion.resize(); }
+    },
+
+    /**
+     * Chart configuration options based on dark/light mode
      */
     getCommonOptions(titleText) {
       const isLight = document.body.classList.contains('light-theme');
@@ -232,13 +248,7 @@
         plugins: {
           title: {
             display: false,
-            text: titleText,
-            color: labelColor,
-            font: {
-              size: 14,
-              family: "'Inter', sans-serif",
-              weight: 'bold'
-            }
+            text: titleText
           },
           legend: {
             display: true,
@@ -274,7 +284,6 @@
                   label += ': ';
                 }
                 if (context.parsed.y !== null) {
-                  // Format back to eok/man representation inside tooltip
                   const valueInWon = context.parsed.y * 10000;
                   label += window.Formatter.formatToEokMan(valueInWon);
                 }
@@ -309,7 +318,6 @@
                 family: "'Outfit', 'Inter', sans-serif"
               },
               callback: function(value) {
-                // If value >= 10000 (1억), represent as 1억, else as X만
                 const valueInWon = value * 10000;
                 if (valueInWon >= 100000000) {
                   return (valueInWon / 100000000).toFixed(0) + '억';

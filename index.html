@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   
   <!-- SEO Optimization -->
-  <title>경제적 자유 설계 계산기</title>
-  <meta name="description" content="현재 월 생활비 기준으로 경제적 자유 달성 시점에 필요한 자금과 그 자금을 마련하기 위해 매월 저축해야 하는 투자금을 단리와 복리로 역산해주는 웹 시뮬레이터.">
+  <title>경제적 자율 시뮬레이터 (Financial Freedom Simulator)</title>
+  <meta name="description" content="목표 나이와 월 생활비를 기준으로 인플레이션과 운용수익률을 반영해 필요한 자산을 계산하고, 언제 도달할 수 있는지와 달성 후 자산 유지 가능성을 계산해주는 은퇴전략 시뮬레이터.">
   
   <!-- Premium Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,8 +23,8 @@
   <header>
     <div class="container header-container">
       <div class="brand">
-        <h1>경제적 자유 설계 계산기 <span class="logo-tag">MVP v1.0</span></h1>
-        <p>현재 생활비를 기준으로 경제적 자유 달성에 필요한 목표 자금과 매월 투자액을 역산합니다.</p>
+        <h1>경제적 자율 시뮬레이터 <span class="logo-tag">MVP v1.0</span></h1>
+        <p>기대수명과 물가상승률을 반영하여 목표자산을 계산하고, 달성 나이와 은퇴 후 자산 수명을 설계합니다.</p>
       </div>
       <div class="header-actions">
         <button id="btn-theme-toggle" class="btn" title="배경 색상 전환 (라이트/다크)">
@@ -57,7 +57,7 @@
         </h2>
 
         <!-- Group 1: Timeframes -->
-        <h3 class="form-group-title">기본 연령 정보</h3>
+        <h3 class="form-group-title">목표 설정 정보</h3>
         
         <div class="form-group">
           <div class="form-label-row">
@@ -72,13 +72,13 @@
 
         <div class="form-group">
           <div class="form-label-row">
-            <label for="retire-age">경제적 자유 달성 나이</label>
+            <label for="target-freedom-age">경제적 자율 목표 나이</label>
           </div>
-          <div class="input-container" id="retire-age-container">
-            <input type="number" id="retire-age" min="21" max="100" placeholder="60" inputmode="numeric">
+          <div class="input-container" id="target-freedom-age-container">
+            <input type="number" id="target-freedom-age" min="21" max="100" placeholder="55" inputmode="numeric">
             <span class="input-suffix">세</span>
           </div>
-          <span class="validation-message" id="retire-age-msg"></span>
+          <span class="validation-message" id="target-freedom-age-msg"></span>
         </div>
 
         <div class="form-group">
@@ -92,12 +92,9 @@
           <span class="validation-message" id="life-expectancy-msg"></span>
         </div>
 
-        <!-- Group 2: Expenses & Assets -->
-        <h3 class="form-group-title">자금 정보</h3>
-
         <div class="form-group">
           <div class="form-label-row">
-            <label for="monthly-expense-now">현재 월 생활비</label>
+            <label for="monthly-expense-now">현재 기준 월 생활비</label>
           </div>
           <div class="input-container" id="monthly-expense-now-container">
             <input type="text" id="monthly-expense-now" placeholder="3,500,000" inputmode="numeric">
@@ -110,6 +107,9 @@
           </div>
           <span class="validation-message" id="monthly-expense-now-msg"></span>
         </div>
+
+        <!-- Group 2: Present State -->
+        <h3 class="form-group-title">현재 보유 자산 및 저축액</h3>
 
         <div class="form-group">
           <div class="form-label-row">
@@ -129,22 +129,22 @@
 
         <div class="form-group">
           <div class="form-label-row">
-            <label for="monthly-pension">경제적 자유 달성 후 예상 월 연금 수령액</label>
+            <label for="monthly-savings">월 저축액 / 월 투자액</label>
           </div>
-          <div class="input-container" id="monthly-pension-container">
-            <input type="text" id="monthly-pension" placeholder="1,200,000" inputmode="numeric">
+          <div class="input-container" id="monthly-savings-container">
+            <input type="text" id="monthly-savings" placeholder="2,000,000" inputmode="numeric">
             <span class="input-suffix">원</span>
           </div>
           <div class="quick-actions">
-            <button class="btn-quick" data-target="monthly-pension" data-value="100000">+10만</button>
-            <button class="btn-quick" data-target="monthly-pension" data-value="500000">+50만</button>
-            <button class="btn-quick" data-target="monthly-pension" data-value="1000000">+100만</button>
+            <button class="btn-quick" data-target="monthly-savings" data-value="100000">+10만</button>
+            <button class="btn-quick" data-target="monthly-savings" data-value="500000">+50만</button>
+            <button class="btn-quick" data-target="monthly-savings" data-value="1000000">+100만</button>
           </div>
-          <span class="validation-message" id="monthly-pension-msg"></span>
+          <span class="validation-message" id="monthly-savings-msg"></span>
         </div>
 
         <!-- Group 3: Market/Return Assumptions -->
-        <h3 class="form-group-title">수익률 및 경제 가정</h3>
+        <h3 class="form-group-title">연수익률 및 물가 가정</h3>
 
         <div class="form-group">
           <div class="form-label-row">
@@ -162,35 +162,44 @@
 
         <div class="form-group">
           <div class="form-label-row">
-            <label for="pre-ret-return">경제적 자유 달성 전 예상 연 수익률</label>
-            <span class="help-trigger" data-help="pre_return" title="도움말 확인">
+            <label for="annual-return-rate">경제적 자율 달성 전 연 기대수익률</label>
+            <span class="help-trigger" data-help="annual_return" title="도움말 확인">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
             </span>
           </div>
-          <div class="input-container" id="pre-ret-return-container">
-            <input type="number" id="pre-ret-return" step="0.1" placeholder="6.0">
+          <div class="input-container" id="annual-return-rate-container">
+            <input type="number" id="annual-return-rate" step="0.1" placeholder="6.0">
             <span class="input-suffix">%</span>
           </div>
-          <span class="validation-message" id="pre-ret-return-msg"></span>
+          <span class="validation-message" id="annual-return-rate-msg"></span>
         </div>
 
         <div class="form-group">
           <div class="form-label-row">
-            <label for="post-ret-return">경제적 자유 달성 후 자산 운용 수익률</label>
+            <label for="post-freedom-return-rate">경제적 자율 달성 후 연 수익률</label>
             <span class="help-trigger" data-help="post_return" title="도움말 확인">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
             </span>
           </div>
-          <div class="input-container" id="post-ret-return-container">
-            <input type="number" id="post-ret-return" step="0.1" placeholder="3.0">
+          <div class="input-container" id="post-freedom-return-rate-container">
+            <input type="number" id="post-freedom-return-rate" step="0.1" placeholder="3.0">
             <span class="input-suffix">%</span>
           </div>
-          <span class="validation-message" id="post-ret-return-msg"></span>
+          <span class="validation-message" id="post-freedom-return-rate-msg"></span>
+        </div>
+
+        <!-- Optional: Reinvestment Toggler -->
+        <div class="toggle-group" style="margin-top: 10px; padding-top: 10px; border-top: none;">
+          <span class="toggle-label" style="font-size: 13px; font-weight: 600;">은퇴 달성 후 초과수익 재투자</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="reinvest-surplus" checked>
+            <span class="slider"></span>
+          </label>
         </div>
 
         <!-- Scenario Preset Component -->
         <div class="scenario-presets-container">
-          <div class="scenario-label">시나리오 프리셋 프리로드</div>
+          <div class="scenario-label">시나리오 통합 프리로드</div>
           <div class="scenario-tabs">
             <button class="scenario-tab" data-preset="conservative">보수적</button>
             <button class="scenario-tab" data-preset="base">기준</button>
@@ -199,16 +208,8 @@
           <div class="scenario-desc" id="scenario-desc">로딩 중...</div>
         </div>
 
-        <!-- Yearly return toggler -->
-        <div class="toggle-group">
-          <span class="toggle-label">연도별 변동 수익률 적용(CSV 예시)</span>
-          <label class="toggle-switch">
-            <input type="checkbox" id="use-yearly-return">
-            <span class="slider"></span>
-          </label>
-        </div>
       </section>
-
+      
       <!-- Output Results Area -->
       <section class="results-area" id="results-section">
         
@@ -216,7 +217,7 @@
         <div class="card summary-sentence-card">
           <h3>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-            한 눈에 보는 경제적 자유 달성 시나리오 요약
+            한 눈에 보는 경제적 자율 달성 시나리오 요약
           </h3>
           <p class="summary-sentence-text" id="summary-text">
             입력값을 분석하여 최적의 적립 시나리오 결과를 한 줄로 계산해 요약합니다.
@@ -244,84 +245,98 @@
           </p>
         </div>
 
-        <!-- 6 Result Cards Grid -->
+        <!-- 6-7 Result Cards Grid -->
         <div class="cards-grid">
-          <div class="result-card">
-            <span class="result-card-label">경제적 자유 달성까지 남은 기간</span>
-            <span class="result-card-val" id="val-years-to-retire">-</span>
-            <span class="result-card-desc">달성 전 적립 가능 기한</span>
-          </div>
-
-          <div class="result-card">
-            <span class="result-card-label">경제적 자유 달성 후 생활 기간</span>
-            <span class="result-card-val" id="val-retirement-years">-</span>
-            <span class="result-card-desc">달성 시점부터 기대수명까지</span>
-          </div>
-
-          <div class="result-card">
-            <span class="result-card-label">경제적 자유 달성 시점 월 생활비</span>
-            <span class="result-card-val" id="val-future-expense">-</span>
-            <span class="result-card-desc">물가상승 반영 미래 가치</span>
-          </div>
-
-          <div class="result-card">
-            <span class="result-card-label">달성 후 필요 총액 (할인 전)</span>
-            <span class="result-card-val" id="val-gross-expense">-</span>
-            <span class="result-card-desc">총 인플레이션 누적 합산</span>
-          </div>
-
-          <div class="result-card">
-            <span class="result-card-label">실제 목표 자산</span>
-            <span class="result-card-val" id="val-required-assets">-</span>
-            <span class="result-card-desc">연금 차감 및 운용수익 반영</span>
-          </div>
-
           <div class="result-card highlight">
-            <span class="result-card-label" style="color: #c084fc">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m22 2-7 20-4-9-9-4Z"/></svg>
-              월 필요 적립액 (복리)
+            <span class="result-card-label" style="color: #a78bfa;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              경제적 자율 목표자산
             </span>
-            <span class="result-card-val" id="val-savings-compound">-</span>
-            <span class="result-card-desc" style="color: #e9d5ff">월말 적립 및 매월 투자 복리 기준</span>
+            <span class="result-card-val" id="val-required-assets">-</span>
+            <span class="result-card-desc" id="val-required-assets-desc">은퇴 시점 필요한 순생활비 기준 가치</span>
+          </div>
+
+          <div class="result-card">
+            <span class="result-card-label">예상 달성 나이</span>
+            <span class="result-card-val" id="val-estimated-age">-</span>
+            <span class="result-card-desc" id="val-estimated-age-desc">현재 조건 기준 달성 시점 나이</span>
+          </div>
+
+          <div class="result-card">
+            <span class="result-card-label">남은 준비 기간</span>
+            <span class="result-card-val" id="val-remaining-years">-</span>
+            <span class="result-card-desc" id="val-remaining-years-desc">목표 도달 시점까지 남은 개월 수</span>
+          </div>
+
+          <div class="result-card">
+            <span class="result-card-label">목표 달성 최소 월 저축액</span>
+            <span class="result-card-val" id="val-min-savings">-</span>
+            <span class="result-card-desc">목표 나이 도달용 최소 투자액 (복리)</span>
+          </div>
+
+          <div class="result-card">
+            <span class="result-card-label">월 저축액 +50만원 시 효과</span>
+            <span class="result-card-val" id="val-savings-50-diff" style="color: #10b981;">-</span>
+            <span class="result-card-desc">목표 도달 시점 단축 효과</span>
+          </div>
+
+          <div class="result-card">
+            <span class="result-card-label">연수익률 +1%p 시 효과</span>
+            <span class="result-card-val" id="val-return-1-diff" style="color: #10b981;">-</span>
+            <span class="result-card-desc">목표 도달 시점 단축 효과</span>
           </div>
         </div>
 
-        <!-- Compound vs Simple Educational Card -->
-        <div class="card result-card warning" style="flex-direction: row; gap: 20px; align-items: center; justify-content: space-between;">
+        <!-- Asset Status / Sustainability Card -->
+        <div class="card result-card warning" id="sustainability-card-panel" style="flex-direction: row; gap: 20px; align-items: center; justify-content: space-between;">
           <div style="flex: 1;">
-            <div class="result-card-label" style="color: #fcd34d">
+            <div class="result-card-label" style="color: #fcd34d;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-              단리/복리 효과 차이 (단리 필요 적립액 대비)
+              경제적 자율 달성 후 자산 상태 판정
             </div>
-            <div style="font-size: 13px; color: var(--color-text-sub); margin-top: 4px;">
-              동일 자산을 단리로 모을 때 월 적립 필요액: <strong id="val-savings-simple" style="color: var(--color-text-main)">-</strong>
+            <div style="font-size: 13px; color: var(--color-text-sub); margin-top: 4px; line-height: 1.5;" id="val-asset-status-desc">
+              자산 수익이 생활비를 지출하고도 유지되는 구조인지 판정합니다.
             </div>
           </div>
-          <div style="text-align: right;">
-            <span style="font-size: 11px; color: var(--color-text-dark); display: block;">복리 투자로 매월 절감액</span>
-            <span class="result-card-val" id="val-savings-diff" style="color: #fbbf24; font-size: 20px;">-</span>
+          <div style="text-align: right; min-width: 140px;">
+            <span style="font-size: 11px; color: var(--color-text-dark); display: block;">자산 유형</span>
+            <span class="result-card-val" id="val-asset-status" style="color: #fbbf24; font-size: 20px;">-</span>
+          </div>
+        </div>
+
+        <!-- Detail Results Box -->
+        <div class="card" style="padding: 20px;">
+          <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--color-text-main);">세부 시뮬레이션 지표</h3>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px; color: var(--color-text-sub);">
+            <div>• 목표 나이 시점 실질 월 생활비: <strong style="color: var(--color-text-main);" id="detail-future-expense">-</strong></div>
+            <div>• 기대수명까지 필요한 총 생활비: <strong style="color: var(--color-text-main);" id="detail-gross-expense">-</strong></div>
+            <div>• 은퇴 달성 시점 예상 적립 자산: <strong style="color: var(--color-text-main);" id="detail-final-balance">-</strong></div>
+            <div>• 기대수명 시점 최종 잔존 자산: <strong style="color: var(--color-text-main);" id="detail-ending-asset">-</strong></div>
           </div>
         </div>
 
         <!-- Graphical Visualizations -->
         <div class="card viz-section">
           <div class="viz-tabs">
-            <button class="viz-tab active" data-target="panel-growth">경제적 자유 달성 전 자산 성장선</button>
-            <button class="viz-tab" data-target="panel-compare">단리 vs 복리 누적 비교</button>
-            <button class="viz-tab" data-target="panel-depletion">경제적 자유 달성 후 자산 추이</button>
+            <button class="viz-tab active" data-target="panel-growth">목표자산 달성 시뮬레이션</button>
+            <button class="viz-tab" data-target="panel-compare">시나리오별 달성 시점 비교</button>
+            <button class="viz-tab" data-target="panel-depletion">자산 유지 및 소진 시뮬레이션</button>
           </div>
           
           <div class="viz-panels">
+            <!-- Chart 1: Pre-freedom growth vs target line -->
             <div class="viz-panel active" id="panel-growth">
               <div class="chart-container">
                 <canvas id="chart-growth"></canvas>
               </div>
             </div>
+            <!-- Chart 2: Scenario comparisons -->
             <div class="viz-panel" id="panel-compare">
               <div class="chart-container">
                 <canvas id="chart-compare"></canvas>
               </div>
             </div>
+            <!-- Chart 3: Post-retirement sustainability -->
             <div class="viz-panel" id="panel-depletion">
               <div class="chart-container">
                 <canvas id="chart-depletion"></canvas>
@@ -333,20 +348,17 @@
         <!-- Yearly projections Table -->
         <div class="card table-section">
           <div class="table-header-row">
-            <h3 class="table-title">경제적 자유 달성 전 자산 성장 시뮬레이션 테이블</h3>
+            <h3 class="table-title" id="table-title-text">자산 적립 시뮬레이션 테이블</h3>
+            <div class="header-actions" style="margin: 0;">
+              <button class="btn btn-sm" id="btn-table-toggle" style="padding: 6px 12px; font-size: 11px;">은퇴 후 자산 테이블 보기</button>
+            </div>
           </div>
           
           <div class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th style="text-align: left;">나이</th>
-                  <th class="hide-on-mobile">경과년수</th>
-                  <th class="hide-on-mobile">누적 납입액</th>
-                  <th>기대 누적 자산 (복리)</th>
-                  <th class="hide-on-mobile">기대 누적 자산 (단리)</th>
-                  <th>목표 달성률</th>
-                </tr>
+            <table id="data-table">
+              <!-- Header and Body are dynamically populated in ui.js -->
+              <thead id="projection-table-head">
+                <!-- Dynamically populated -->
               </thead>
               <tbody id="projection-table-body">
                 <!-- Javascript populated -->
@@ -371,7 +383,7 @@
     </div>
   </div>
 
-  <!-- Toast Toast Notification popup -->
+  <!-- Toast popup -->
   <div class="toast" id="toast">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
     성공 알림 문구
@@ -381,9 +393,9 @@
   <footer>
     <div class="container footer-content">
       <p class="legal-notice">
-        <strong>법적 고지사항 및 안내:</strong> 본 서비스는 입력값과 가정을 기초로 한 단순 시뮬레이션 결과이며 미래의 투자 수익이나 실제 경제적 자유 달성에 필요한 자금을 확정/보장하지 않습니다. 개개인의 실제 경제적 자유 달성 필요 자금은 물가 변동성, 세금 제도, 건강 상태, 투자 성과 등 다양한 요인에 따라 다르게 산출될 수 있습니다. 본 결과를 재무 의사결정에 그대로 활용하시기 전에 재무 설계 전문가 등과의 추가적인 상담을 권장합니다.
+        <strong>법적 고지사항 및 안내:</strong> 본 서비스는 입력값과 일반적인 가정을 기초로 한 단순 시뮬레이션 결과이며 미래의 투자 수익이나 실제 경제적 자율 달성을 보장하지 않습니다. 실제 달성 시점과 필요 자산은 시장 변동성, 인플레이션의 변동, 세금 제도 및 주택/상속 등의 개인 조건에 따라 매우 크게 달라질 수 있으므로 투자 및 재무 계획 결정 전 전문가와의 추가 검토를 권장합니다.
       </p>
-      <p class="copyright">&copy; 2026 경제적 자유 설계 계산기. All rights reserved.</p>
+      <p class="copyright">&copy; 2026 경제적 자율 시뮬레이터. All rights reserved. Chart.js is licensed under the MIT License.</p>
     </div>
   </footer>
 

@@ -1,181 +1,233 @@
 /**
- * RetireMap Calculator Module
- * Handles all financial equations, compounding, simple interest,
- * and yearly projections (pre-retirement and post-retirement).
+ * Financial Freedom Simulator Calculator Module
+ * Lays out all calculations for the Financial Freedom Simulator MVP:
+ * - Future Monthly Expense (inflation-adjusted)
+ * - Required Financial Freedom Asset (discounted net expense summation)
+ * - Estimated Freedom Age (via monthly asset accumulation simulation)
+ * - Savings and Return rate short-term scenarios
+ * - Post-freedom yearly sustainability simulation
+ * - Final asset status determination
  */
 (function() {
   const Calculator = {
     /**
-     * Calculate years to retire
+     * Calculate future monthly expense at target freedom age
+     * futureMonthlyExpense = targetMonthlyExpense * (1 + inflationRate) ^ yearsToTarget
      */
-    calculateYearsToRetire(currentAge, retireAge) {
-      return Math.max(0, retireAge - currentAge);
+    calculateFutureMonthlyExpense(monthlyExpenseNow, inflationRate, yearsToTarget) {
+      return monthlyExpenseNow * Math.pow(1 + inflationRate, Math.max(0, yearsToTarget));
     },
 
     /**
-     * Calculate years of retirement
+     * Calculate required freedom asset at the point of achievement
+     * requiredFreedomAsset = Sum of [ annualExpense_t / (1 + postFreedomReturnRate)^t ]
+     * for t = 1 to postFreedomYears
      */
-    calculateRetirementYears(retireAge, lifeExpectancy) {
-      return Math.max(0, lifeExpectancy - retireAge);
-    },
-
-    /**
-     * Calculate future monthly expense adjusted for inflation
-     */
-    calculateFutureMonthlyExpense(monthlyExpenseNow, inflationRate, yearsToRetire) {
-      return monthlyExpenseNow * Math.pow(1 + inflationRate, yearsToRetire);
-    },
-
-    /**
-     * Calculate required retirement assets at the point of retirement
-     * using the discounted net expense method.
-     */
-    calculateRequiredRetirementAsset(params) {
-      const {
-        futureMonthlyExpense,
-        inflationRate,
-        postRetReturn,
-        monthlyPension,
-        retirementYears
-      } = params;
-
+    calculateRequiredFreedomAsset(futureMonthlyExpense, inflationRate, postFreedomReturnRate, postFreedomYears) {
       let totalRequired = 0;
-      const annualPension = monthlyPension * 12;
-
-      for (let t = 1; t <= retirementYears; t++) {
-        // Annual expense grows with inflation each year of retirement
+      for (let t = 1; t <= postFreedomYears; t++) {
         const annualExpense_t = futureMonthlyExpense * 12 * Math.pow(1 + inflationRate, t - 1);
-        const netExpense_t = Math.max(annualExpense_t - annualPension, 0);
-        
-        // Discount back to retirement point (t=0) using post-retirement return
-        const discountedNetExpense_t = netExpense_t / Math.pow(1 + postRetReturn, t);
-        totalRequired += discountedNetExpense_t;
+        const discountFactor = Math.pow(1 + postFreedomReturnRate, t);
+        totalRequired += annualExpense_t / discountFactor;
       }
-
       return totalRequired;
     },
 
     /**
-     * Calculate gross (inflation-adjusted, non-discounted) retirement expenses
+     * Calculate the undiscounted sum of all living expenses post-freedom
      */
-    calculateGrossRetirementExpense(futureMonthlyExpense, inflationRate, retirementYears) {
+    calculateGrossFreedomExpense(futureMonthlyExpense, inflationRate, postFreedomYears) {
       let grossTotal = 0;
-      for (let t = 1; t <= retirementYears; t++) {
+      for (let t = 1; t <= postFreedomYears; t++) {
         grossTotal += futureMonthlyExpense * 12 * Math.pow(1 + inflationRate, t - 1);
       }
       return grossTotal;
     },
 
     /**
-     * Calculate monthly savings required under monthly compounding
+     * Calculate minimum monthly savings required to reach the target asset by targetFreedomAge
      */
-    calculateMonthlySavingsCompound(params) {
-      const {
-        requiredRetirementAsset,
-        currentAssets,
-        preRetReturn,
-        yearsToRetire
-      } = params;
+    calculateMinMonthlySavings(requiredAsset, currentAssets, annualReturnRate, yearsToTarget) {
+      if (yearsToTarget <= 0) return 0;
+      const n = yearsToTarget * 12;
+      const r = annualReturnRate / 12;
 
-      if (yearsToRetire <= 0) return 0;
-
-      const r = preRetReturn / 12;
-      const n = yearsToRetire * 12;
-
-      // Future value of current assets under monthly compounding
       const FV_currentAssets = currentAssets * Math.pow(1 + r, n);
-      const targetGap = requiredRetirementAsset - FV_currentAssets;
+      const gap = requiredAsset - FV_currentAssets;
 
-      if (targetGap <= 0) {
-        return 0; // Current assets are sufficient
-      }
+      if (gap <= 0) return 0;
+      if (r === 0) return gap / n;
 
-      if (r === 0) {
-        return targetGap / n;
-      }
-
-      // PMT formula: Gap * r / ((1 + r)^n - 1)
-      return targetGap * r / (Math.pow(1 + r, n) - 1);
+      return gap * r / (Math.pow(1 + r, n) - 1);
     },
 
     /**
-     * Calculate monthly savings required under simple interest (approximation)
+     * Simulates month-by-month asset growth to estimate target achievement age
+     * Returns: { achieved: boolean, age: number, months: number, finalBalance: number }
      */
-    calculateMonthlySavingsSimple(params) {
-      const {
-        requiredRetirementAsset,
-        currentAssets,
-        preRetReturn,
-        yearsToRetire
-      } = params;
-
-      if (yearsToRetire <= 0) return 0;
-
-      const n = yearsToRetire * 12;
-
-      // Future value of current assets under simple interest
-      const FV_currentAssets_simple = currentAssets * (1 + preRetReturn * yearsToRetire);
-      const targetGap = requiredRetirementAsset - FV_currentAssets_simple;
-
-      if (targetGap <= 0) {
-        return 0;
-      }
-
-      // PMT_simple = targetGap / [ n * (1 + preRetReturn * yearsToRetire / 2) ]
-      const denominator = n * (1 + (preRetReturn * yearsToRetire) / 2);
-      if (denominator <= 0) return 0;
-
-      const pmtSimple = targetGap / denominator;
-      return Math.max(0, pmtSimple);
-    },
-
-    /**
-     * Generate pre-retirement yearly projection table for UI & Charting
-     */
-    generatePreRetirementProjection(params) {
+    simulateAssetGrowth(params) {
       const {
         currentAge,
-        yearsToRetire,
         currentAssets,
-        preRetReturn,
-        monthlySavingsCompound,
-        monthlySavingsSimple
+        monthlySavings,
+        annualReturnRate,
+        requiredAsset,
+        maxAge = 110
+      } = params;
+
+      let balance = currentAssets;
+      const monthlyReturn = annualReturnRate / 12;
+      const maxMonths = (maxAge - currentAge) * 12;
+
+      // If already achieved at start
+      if (balance >= requiredAsset) {
+        return { achieved: true, age: currentAge, months: 0, finalBalance: balance };
+      }
+
+      // If return is <= 0 and savings is 0, it can never grow to reach the asset (unless already achieved)
+      if (monthlyReturn <= 0 && monthlySavings <= 0) {
+        return { achieved: false, age: maxAge, months: maxMonths, finalBalance: balance };
+      }
+
+      for (let m = 1; m <= maxMonths; m++) {
+        balance = balance * (1 + monthlyReturn) + monthlySavings;
+        if (balance >= requiredAsset) {
+          const ageFraction = m / 12;
+          return {
+            achieved: true,
+            age: currentAge + ageFraction,
+            months: m,
+            finalBalance: balance
+          };
+        }
+      }
+
+      return {
+        achieved: false,
+        age: maxAge,
+        months: maxMonths,
+        finalBalance: balance
+      };
+    },
+
+    /**
+     * Calculate achievement age and remaining period for comparison scenarios
+     */
+    calculateScenarios(inputs, requiredAssetAtTarget) {
+      const baseParams = {
+        currentAge: inputs.currentAge,
+        currentAssets: inputs.currentAssets,
+        requiredAsset: requiredAssetAtTarget,
+        maxAge: inputs.lifeExpectancy
+      };
+
+      // Scenario 1: Current condition
+      const current = this.simulateAssetGrowth({
+        ...baseParams,
+        monthlySavings: inputs.monthlySavings,
+        annualReturnRate: inputs.annualReturnRate
+      });
+
+      // Scenario 2: Monthly savings + 500,000 KRW
+      const savingsAdd50 = this.simulateAssetGrowth({
+        ...baseParams,
+        monthlySavings: inputs.monthlySavings + 500000,
+        annualReturnRate: inputs.annualReturnRate
+      });
+
+      // Scenario 3: Monthly savings + 1,000,000 KRW
+      const savingsAdd100 = this.simulateAssetGrowth({
+        ...baseParams,
+        monthlySavings: inputs.monthlySavings + 1000000,
+        annualReturnRate: inputs.annualReturnRate
+      });
+
+      // Scenario 4: Return rate + 1%p
+      const returnAdd1 = this.simulateAssetGrowth({
+        ...baseParams,
+        monthlySavings: inputs.monthlySavings,
+        annualReturnRate: inputs.annualReturnRate + 0.01
+      });
+
+      // Scenario 5: Return rate + 2%p
+      const returnAdd2 = this.simulateAssetGrowth({
+        ...baseParams,
+        monthlySavings: inputs.monthlySavings,
+        annualReturnRate: inputs.annualReturnRate + 0.02
+      });
+
+      return {
+        current,
+        savingsAdd50,
+        savingsAdd100,
+        returnAdd1,
+        returnAdd2
+      };
+    },
+
+    /**
+     * Simulates year-by-year post-freedom asset depletion or growth
+     */
+    generatePostFreedomProjection(params) {
+      const {
+        startAge,
+        lifeExpectancy,
+        startingAsset,
+        postFreedomReturnRate,
+        inflationRate,
+        currentMonthlyExpense,
+        currentAge,
+        reinvestSurplus
       } = params;
 
       const projection = [];
-      const r = preRetReturn / 12;
+      const postFreedomYears = lifeExpectancy - Math.floor(startAge);
       
-      let balanceCompound = currentAssets;
-      let cumulativeContributionCompound = 0;
-      
-      // Starting point (Year 0)
+      // Calculate future monthly expense at the actual startAge
+      const yearsToStart = Math.max(0, startAge - currentAge);
+      const startMonthlyExpense = currentMonthlyExpense * Math.pow(1 + inflationRate, yearsToStart);
+
+      let balance = startingAsset;
+
+      // Year 0 (achievement point)
       projection.push({
         yearIndex: 0,
-        age: currentAge,
-        annualContribution: 0,
-        endBalanceCompound: currentAssets,
-        endBalanceSimple: currentAssets,
-        targetAsset: 0
+        age: Math.floor(startAge),
+        startingAsset: startingAsset,
+        annualReturn: 0,
+        annualExpense: 0,
+        endingAsset: startingAsset
       });
 
-      for (let y = 1; y <= yearsToRetire; y++) {
-        // Compound simulation (run month-by-month for 12 months)
-        for (let m = 1; m <= 12; m++) {
-          balanceCompound = balanceCompound * (1 + r) + monthlySavingsCompound;
-          cumulativeContributionCompound += monthlySavingsCompound;
+      for (let t = 1; t <= postFreedomYears; t++) {
+        const currentYearAge = Math.floor(startAge) + t;
+        const startingAssetYear = balance;
+        const annualReturn = startingAssetYear * postFreedomReturnRate;
+        const annualExpense = startMonthlyExpense * 12 * Math.pow(1 + inflationRate, t - 1);
+        
+        let endingAsset = 0;
+        if (reinvestSurplus) {
+          endingAsset = startingAssetYear + annualReturn - annualExpense;
+        } else {
+          // If reinvestSurplus is OFF, surplus return is not reinvested
+          const surplus = annualReturn - annualExpense;
+          if (surplus > 0) {
+            endingAsset = startingAssetYear; // Keeps initial principal, doesn't grow
+          } else {
+            endingAsset = startingAssetYear + surplus; // Decreases because return < expense
+          }
         }
 
-        // Simple interest formula for year y
-        const n_y = y * 12;
-        const balanceSimple = currentAssets * (1 + preRetReturn * y) + 
-                              monthlySavingsSimple * n_y * (1 + (preRetReturn * y) / 2);
+        // We allow balance to go negative in projection to show depletion curve clearly in charts/tables
+        balance = endingAsset;
 
         projection.push({
-          yearIndex: y,
-          age: currentAge + y,
-          annualContribution: cumulativeContributionCompound,
-          endBalanceCompound: balanceCompound,
-          endBalanceSimple: balanceSimple
+          yearIndex: t,
+          age: currentYearAge,
+          startingAsset: startingAssetYear,
+          annualReturn: annualReturn,
+          annualExpense: annualExpense,
+          endingAsset: endingAsset
         });
       }
 
@@ -183,57 +235,73 @@
     },
 
     /**
-     * Generate post-financial freedom yearly projection table (decumulation or growth)
+     * Determine final asset status based on starting and ending balances
      */
-    generatePostRetirementProjection(params) {
-      const {
-        retireAge,
-        retirementYears,
-        startingAssetCompound,
-        startingAssetSimple,
-        postRetReturn,
-        inflationRate,
-        futureMonthlyExpense,
-        monthlyPension
-      } = params;
+    determineAssetStatus(startingAsset, finalAsset, projection) {
+      // 1) 소진형: 기대수명 이전에 자산이 0 이하가 되면 소진형
+      const hasDepleted = projection.some((row, idx) => idx > 0 && row.endingAsset <= 0);
+      if (hasDepleted || finalAsset <= 0 || finalAsset < startingAsset * 0.9) {
+        return {
+          status: 'depletion',
+          name: '자산 소진형',
+          description: '현재 가정에서는 경제적 자율 달성 후 원금을 점진적으로 소진하게 됩니다. 기대수명 전에 자산이 고갈될 위험이 있으므로 월 저축액을 늘리거나, 은퇴 후 수익률을 높이거나, 목표 생활비를 줄이는 조정을 권장합니다.'
+        };
+      }
 
+      // 2) 유지형: 기대수명까지 자산이 유지되며, 마지막 자산이 시작 자산의 ±10% 범위 내면 유지형
+      if (finalAsset >= startingAsset * 0.9 && finalAsset <= startingAsset * 1.1) {
+        return {
+          status: 'maintenance',
+          name: '자산 유지형',
+          description: '현재 가정에서는 경제적 자율 달성 후 원금을 크게 훼손하지 않고 은퇴 생활을 안정적으로 유지할 수 있습니다. 자산에서 발생하는 연간 수익이 연 생활비 지출과 조화를 이루는 견고한 은퇴 설계입니다.'
+        };
+      }
+
+      // 3) 성장형: 기대수명 시점 자산이 시작 자산보다 유의미하게 크면 성장형
+      return {
+        status: 'growth',
+        name: '자산 성장형',
+        description: '현재 가정에서는 생활비를 지출하고도 투자 수익이 더 커서 남는 수익이 재투자되어 자산이 오히려 성장합니다. 대대손손 상속이 가능하거나 한층 더 풍요로운 노후 생활을 누릴 수 있는 최상의 시나리오입니다.'
+      };
+    },
+
+    /**
+     * Simulates year-by-year pre-freedom accumulation table
+     */
+    generatePreFreedomProjection(inputs, achievedMonths) {
       const projection = [];
-      let balanceCompound = startingAssetCompound;
-      let balanceSimple = startingAssetSimple;
-      const annualPension = monthlyPension * 12;
+      const years = Math.ceil(achievedMonths / 12);
+      let balance = inputs.currentAssets;
+      let cumulativeSavings = 0;
+      const monthlyReturn = inputs.annualReturnRate / 12;
 
-      // Starting point (Year 0 of financial freedom)
+      // Year 0
       projection.push({
-        retirementYearIndex: 0,
-        age: retireAge,
-        annualExpense: 0,
-        annualPension: 0,
-        netExpense: 0,
-        endingBalanceCompound: startingAssetCompound,
-        endingBalanceSimple: startingAssetSimple
+        yearIndex: 0,
+        age: inputs.currentAge,
+        cumulativeSavings: 0,
+        endingAsset: inputs.currentAssets
       });
 
-      for (let t = 1; t <= retirementYears; t++) {
-        const annualExpense = futureMonthlyExpense * 12 * Math.pow(1 + inflationRate, t - 1);
-        const netExpense = Math.max(annualExpense - annualPension, 0);
-        
-        // Compound decumulation/growth
-        const endingBalanceCompound = (balanceCompound * (1 + postRetReturn)) - netExpense;
-        balanceCompound = endingBalanceCompound;
-
-        // Simple decumulation/growth (Flat interest on initial simple capital)
-        const interestSimple = startingAssetSimple * postRetReturn;
-        const endingBalanceSimple = (balanceSimple + interestSimple) - netExpense;
-        balanceSimple = endingBalanceSimple;
+      for (let y = 1; y <= years; y++) {
+        // Month-by-month simulation for 12 months (or up to the exact achieved months)
+        for (let m = 1; m <= 12; m++) {
+          const currentTotalMonth = (y - 1) * 12 + m;
+          if (currentTotalMonth <= achievedMonths) {
+            balance = balance * (1 + monthlyReturn) + inputs.monthlySavings;
+            cumulativeSavings += inputs.monthlySavings;
+          } else {
+            // After achievement month, if we just want to fill out the final year,
+            // we stop adding savings and returns or just let it flat line/stop.
+            // But since the projection goes up to achievement year, this works.
+          }
+        }
 
         projection.push({
-          retirementYearIndex: t,
-          age: retireAge + t,
-          annualExpense: annualExpense,
-          annualPension: annualPension,
-          netExpense: netExpense,
-          endingBalanceCompound: endingBalanceCompound,
-          endingBalanceSimple: endingBalanceSimple
+          yearIndex: y,
+          age: inputs.currentAge + y,
+          cumulativeSavings: cumulativeSavings,
+          endingAsset: balance
         });
       }
 

@@ -1,0 +1,2 @@
+example_id,current_age,target_age,life_expectancy,monthly_expense,current_assets,monthly_savings,inflation,annual_return,post_return
+default,40,55,90,3500000,100000000,2000000,0.025,0.06,0.03

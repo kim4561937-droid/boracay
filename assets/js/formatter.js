@@ -1,6 +1,6 @@
 /**
- * RetireMap Formatter Module
- * Handles currency formatting, Eok-Man conversion, percent representation,
+ * Financial Freedom Simulator Formatter Module
+ * Handles currency formatting, Eok-Man representation, percent representation,
  * input sanitization, and summary text generation.
  */
 (function() {
@@ -43,9 +43,8 @@
 
     /**
      * Converts a raw Won value to a readable Eok/Man string
-     * e.g., 1510000000 -> "15억 1,000만원"
-     * e.g., 3500000 -> "350만원"
-     * e.g., 0 -> "0원"
+     * e.g., 1530000000 -> "약 15.3억원" or "15억 3,000만원"
+     * We will use "15억 3,000만원" for precision, but "약 X억 Y천만원" or "X.Y억원" for results card summaries where appropriate.
      */
     formatToEokMan(value) {
       if (value === 0) return '0원';
@@ -75,49 +74,38 @@
      */
     formatPercent(value) {
       const percentage = value * 100;
-      // Keep up to 2 decimal places, remove trailing zeros
       return parseFloat(percentage.toFixed(2)) + '%';
     },
 
     /**
-     * Generate dynamic summary paragraph based on inputs and calculations
+     * Generate dynamic summary paragraph based on inputs, results and final status
      */
-    generateSummarySentence(inputs, results) {
+    generateSummarySentence(inputs, results, statusText) {
       const currentAge = inputs.currentAge;
-      const retireAge = inputs.retireAge;
+      const targetFreedomAge = inputs.targetFreedomAge;
       const lifeExpectancy = inputs.lifeExpectancy;
       const inflationPercent = this.formatPercent(inputs.inflationRate);
-      const preRetReturnPercent = this.formatPercent(inputs.preRetReturn);
-      const postRetReturnPercent = this.formatPercent(inputs.postRetReturn);
+      const annualReturnPercent = this.formatPercent(inputs.annualReturnRate);
+      const postReturnPercent = this.formatPercent(inputs.postFreedomReturnRate);
       
-      const livingExpensesNowStr = this.formatToEokMan(inputs.monthlyExpenseNow);
-      const futureExpenseStr = this.formatToEokMan(results.futureMonthlyExpense);
-      const retirementYears = retireAge - currentAge;
-      const lifeYears = lifeExpectancy - retireAge;
-      const grossRequiredStr = this.formatToEokMan(results.grossRetirementExpense);
-      const requiredAssetStr = this.formatToEokMan(results.requiredRetirementAsset);
-      const monthlyPensionStr = this.formatToEokMan(inputs.monthlyPension);
-      const savingsCompoundStr = this.formatToEokMan(results.monthlySavingsCompound);
+      const monthlyExpenseNowStr = this.formatToEokMan(inputs.monthlyExpenseNow);
+      const currentAssetsStr = this.formatToEokMan(inputs.currentAssets);
+      const monthlySavingsStr = this.formatToEokMan(inputs.monthlySavings);
+      const requiredAssetStr = this.formatToEokMan(results.requiredFreedomAsset);
+      
+      let summary = `현재 <strong>${currentAge}세</strong>, 현재 월 생활비 <strong>${monthlyExpenseNowStr}</strong>, `;
+      summary += `경제적 자율 목표 나이 <strong>${targetFreedomAge}세</strong>, 기대수명 <strong>${lifeExpectancy}세</strong>, `;
+      summary += `연 인플레이션 <strong>${inflationPercent}</strong> 기준으로 계산하면 경제적 자율에 필요한 목표자산은 약 <strong>${requiredAssetStr}</strong>입니다. `;
+      summary += `현재 자산 <strong>${currentAssetsStr}</strong>, 월 저축액 <strong>${monthlySavingsStr}</strong>, `;
+      summary += `연 <strong>${annualReturnPercent}</strong> 수익률을 가정할 경우 `;
 
-      let summary = `현재 월 생활비 <strong>${livingExpensesNowStr}</strong>, `;
-      summary += `<strong>${retireAge}세 경제적 자유 달성</strong>(준비 기간 ${retirementYears}년), `;
-      summary += `기대수명 <strong>${lifeExpectancy}세</strong>(달성 후 생활 ${lifeYears}년), `;
-      summary += `연 인플레이션 <strong>${inflationPercent}</strong> 기준으로 계산하면 `;
-      summary += `경제적 자유 달성 시점의 월 필요 생활비는 약 <strong>${futureExpenseStr}</strong>입니다. `;
-      summary += `경제적 자유 달성 후 ${lifeYears}년 동안 필요한 총 생활비(할인 전 총액)는 약 <strong>${grossRequiredStr}</strong>이며, `;
-      
-      if (inputs.monthlyPension > 0) {
-        summary += `월 <strong>${monthlyPensionStr}</strong>의 연금 수입을 반영하여 달성 전 수익률 ${preRetReturnPercent} 및 달성 후 자산운용 수익률 ${postRetReturnPercent}로 역산한 실제 목표 경제적 자유 자산은 약 <strong>${requiredAssetStr}</strong>입니다. `;
+      if (results.achieved) {
+        summary += `약 <strong>${results.achievedAge.toFixed(1)}세</strong> 전후 목표자산에 도달할 것으로 예상됩니다. `;
       } else {
-        summary += `달성 전 수익률 ${preRetReturnPercent} 및 달성 후 자산운용 수익률 ${postRetReturnPercent}로 역산한 실제 목표 경제적 자유 자산은 약 <strong>${requiredAssetStr}</strong>입니다. `;
+        summary += `기대수명(${lifeExpectancy}세) 이전에는 목표자산 달성이 어려울 것으로 예상됩니다. `;
       }
 
-      if (results.monthlySavingsCompound > 0) {
-        summary += `현재 보유 자산 <strong>${this.formatToEokMan(inputs.currentAssets)}</strong>을 바탕으로 목표를 달성하기 위해서는 `;
-        summary += `앞으로 매월 약 <strong>${savingsCompoundStr}</strong>(복리 기준)을 적립해야 합니다.`;
-      } else {
-        summary += `현재 보유 자산 <strong>${this.formatToEokMan(inputs.currentAssets)}</strong>의 미래 성장치만으로도 추가 적립 없이 목표 자산을 달성할 수 있습니다!`;
-      }
+      summary += `경제적 자율 달성 후 연 <strong>${postReturnPercent}</strong> 수익률 기준으로는 생활비를 지출하면서 <strong>${statusText}</strong> 상태가 됩니다.`;
 
       return summary;
     }

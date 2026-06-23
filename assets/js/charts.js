@@ -141,6 +141,14 @@
       };
 
       const options = this.getCommonOptions('시나리오별 달성 시점 비교 (세)');
+      
+      // Override Y axis ticks callback to format as Age (세) instead of money (만/억)
+      if (options.scales && options.scales.y && options.scales.y.ticks) {
+        options.scales.y.ticks.callback = function(value) {
+          return value + '세';
+        };
+      }
+
       // Custom tooltip formatting for scenario compare to display "달성 불가" if applicable
       options.plugins.tooltip.callbacks.label = function(context) {
         const idx = context.dataIndex;

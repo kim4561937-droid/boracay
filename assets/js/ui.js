@@ -148,9 +148,18 @@
             targetPanel.classList.add('active');
           }
           
-          // Force Chart.js to resize/update the active chart
+          // Force Chart.js to resize/update the active chart after a small layout reflow delay
           if (window.Charts) {
-            window.Charts.resizeAll();
+            setTimeout(() => {
+              window.Charts.resizeAll();
+              window.Charts.updateAll(
+                window.State.projections.preFreedom,
+                window.State.projections.postFreedom,
+                window.State.results.requiredFreedomAsset,
+                window.State.scenarios,
+                window.State.inputs.lifeExpectancy
+              );
+            }, 50);
           }
         });
       });

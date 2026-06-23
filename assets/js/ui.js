@@ -655,7 +655,7 @@
         window.State.projections.preFreedom,
         window.State.projections.postFreedom,
         r.requiredFreedomAsset,
-        r.scenarios,
+        sc,
         ip.lifeExpectancy
       );
 

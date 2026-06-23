@@ -20,7 +20,7 @@
         errors.currentAge = '현재 나이는 20세에서 80세 사이여야 합니다.';
       }
 
-      // 2. Target Freedom Age (경제적 자율 목표 나이)
+      // 2. Target Freedom Age (경제적 자유 목표 나이)
       if (isNaN(inputs.targetFreedomAge)) {
         errors.targetFreedomAge = '목표 나이를 숫자로 입력해주세요.';
       } else if (inputs.targetFreedomAge <= inputs.currentAge) {
@@ -66,14 +66,14 @@
         warnings.inflationRate = '인플레이션율이 비현실적입니다 (-5% ~ 15% 권장).';
       }
 
-      // 8. Pre-freedom Return (경제적 자율 달성 전 예상 연 수익률: -20% ~ 20% 범위 밖이면 경고)
+      // 8. Pre-freedom Return (경제적 자유 달성 전 예상 연 수익률: -20% ~ 20% 범위 밖이면 경고)
       if (isNaN(inputs.annualReturnRate)) {
         errors.annualReturnRate = '달성 전 예상 연 수익률을 숫자로 입력해주세요.';
       } else if (inputs.annualReturnRate < -0.20 || inputs.annualReturnRate > 0.20) {
         warnings.annualReturnRate = '기대수익률이 비현실적입니다 (-20% ~ 20% 권장).';
       }
 
-      // 9. Post-freedom Return (경제적 자율 달성 후 예상 연 수익률: -20% ~ 20% 범위 밖이면 경고)
+      // 9. Post-freedom Return (경제적 자유 달성 후 예상 연 수익률: -20% ~ 20% 범위 밖이면 경고)
       if (isNaN(inputs.postFreedomReturnRate)) {
         errors.postFreedomReturnRate = '달성 후 예상 연 수익률을 숫자로 입력해주세요.';
       } else if (inputs.postFreedomReturnRate < -0.20 || inputs.postFreedomReturnRate > 0.20) {

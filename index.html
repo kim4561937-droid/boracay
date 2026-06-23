@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   
   <!-- SEO Optimization -->
-  <title>경제적 자율 시뮬레이터 (Financial Freedom Simulator)</title>
+  <title>경제적 자유 시뮬레이터 (Financial Freedom Simulator)</title>
   <meta name="description" content="목표 나이와 월 생활비를 기준으로 인플레이션과 운용수익률을 반영해 필요한 자산을 계산하고, 언제 도달할 수 있는지와 달성 후 자산 유지 가능성을 계산해주는 은퇴전략 시뮬레이터.">
   
   <!-- Premium Fonts -->
@@ -23,7 +23,7 @@
   <header>
     <div class="container header-container">
       <div class="brand">
-        <h1>경제적 자율 시뮬레이터 <span class="logo-tag">MVP v1.0</span></h1>
+        <h1>경제적 자유 시뮬레이터 <span class="logo-tag">MVP v1.0</span></h1>
         <p>기대수명과 물가상승률을 반영하여 목표자산을 계산하고, 달성 나이와 은퇴 후 자산 수명을 설계합니다.</p>
       </div>
       <div class="header-actions">
@@ -72,7 +72,7 @@
 
         <div class="form-group">
           <div class="form-label-row">
-            <label for="target-freedom-age">경제적 자율 목표 나이</label>
+            <label for="target-freedom-age">경제적 자유 목표 나이</label>
           </div>
           <div class="input-container" id="target-freedom-age-container">
             <input type="number" id="target-freedom-age" min="21" max="100" placeholder="55" inputmode="numeric">
@@ -162,7 +162,7 @@
 
         <div class="form-group">
           <div class="form-label-row">
-            <label for="annual-return-rate">경제적 자율 달성 전 연 기대수익률</label>
+            <label for="annual-return-rate">경제적 자유 달성 전 연 기대수익률</label>
             <span class="help-trigger" data-help="annual_return" title="도움말 확인">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
             </span>
@@ -176,7 +176,7 @@
 
         <div class="form-group">
           <div class="form-label-row">
-            <label for="post-freedom-return-rate">경제적 자율 달성 후 연 수익률</label>
+            <label for="post-freedom-return-rate">경제적 자유 달성 후 연 수익률</label>
             <span class="help-trigger" data-help="post_return" title="도움말 확인">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
             </span>
@@ -217,7 +217,7 @@
         <div class="card summary-sentence-card">
           <h3>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-            한 눈에 보는 경제적 자율 달성 시나리오 요약
+            한 눈에 보는 경제적 자유 달성 시나리오 요약
           </h3>
           <p class="summary-sentence-text" id="summary-text">
             입력값을 분석하여 최적의 적립 시나리오 결과를 한 줄로 계산해 요약합니다.
@@ -250,7 +250,7 @@
           <div class="result-card highlight">
             <span class="result-card-label" style="color: #a78bfa;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-              경제적 자율 목표자산
+              경제적 자유 목표자산
             </span>
             <span class="result-card-val" id="val-required-assets">-</span>
             <span class="result-card-desc" id="val-required-assets-desc">은퇴 시점 필요한 순생활비 기준 가치</span>
@@ -292,7 +292,7 @@
           <div style="flex: 1;">
             <div class="result-card-label" style="color: #fcd34d;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-              경제적 자율 달성 후 자산 상태 판정
+              경제적 자유 달성 후 자산 상태 판정
             </div>
             <div style="font-size: 13px; color: var(--color-text-sub); margin-top: 4px; line-height: 1.5;" id="val-asset-status-desc">
               자산 수익이 생활비를 지출하고도 유지되는 구조인지 판정합니다.
@@ -393,9 +393,9 @@
   <footer>
     <div class="container footer-content">
       <p class="legal-notice">
-        <strong>법적 고지사항 및 안내:</strong> 본 서비스는 입력값과 일반적인 가정을 기초로 한 단순 시뮬레이션 결과이며 미래의 투자 수익이나 실제 경제적 자율 달성을 보장하지 않습니다. 실제 달성 시점과 필요 자산은 시장 변동성, 인플레이션의 변동, 세금 제도 및 주택/상속 등의 개인 조건에 따라 매우 크게 달라질 수 있으므로 투자 및 재무 계획 결정 전 전문가와의 추가 검토를 권장합니다.
+        <strong>법적 고지사항 및 안내:</strong> 본 서비스는 입력값과 일반적인 가정을 기초로 한 단순 시뮬레이션 결과이며 미래의 투자 수익이나 실제 경제적 자유 달성을 보장하지 않습니다. 실제 달성 시점과 필요 자산은 시장 변동성, 인플레이션의 변동, 세금 제도 및 주택/상속 등의 개인 조건에 따라 매우 크게 달라질 수 있으므로 투자 및 재무 계획 결정 전 전문가와의 추가 검토를 권장합니다.
       </p>
-      <p class="copyright">&copy; 2026 경제적 자율 시뮬레이터. All rights reserved. Chart.js is licensed under the MIT License.</p>
+      <p class="copyright">&copy; 2026 경제적 자유 시뮬레이터. All rights reserved. Chart.js is licensed under the MIT License.</p>
     </div>
   </footer>
 

@@ -205,7 +205,7 @@
         chartAssetDepletion = new Chart(ctx, {
           type: 'line',
           data: data,
-          options: this.getCommonOptions('경제적 자율 달성 후 자산 추이 (만원)')
+          options: this.getCommonOptions('경제적 자유 달성 후 자산 추이 (만원)')
         });
       }
     },

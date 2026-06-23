@@ -14,9 +14,9 @@ optimistic,낙관적,0.08,0.04,0.03,낙관적 시나리오`,
 
     'help_texts': `key,title,body
 inflation,인플레이션,현재 생활비를 미래 시점 생활비로 환산할 때 사용하는 연 물가상승률입니다.
-annual_return,기대수익률,경제적 자율 달성 전 자산이 기대할 수 있는 연평균 수익률입니다.
-post_return,달성 후 수익률,경제적 자율 달성 후 자산을 운용할 때 기대하는 연평균 수익률입니다.
-freedom_asset,경제적 자율 목표자산,경제적 자율 달성 후 기대수명까지 생활비를 감당하기 위해 필요한 자산입니다.`,
+annual_return,기대수익률,경제적 자유 달성 전 자산이 기대할 수 있는 연평균 수익률입니다.
+post_return,달성 후 수익률,경제적 자유 달성 후 자산을 운용할 때 기대하는 연평균 수익률입니다.
+freedom_asset,경제적 자유 목표자산,경제적 자유 달성 후 기대수명까지 생활비를 감당하기 위해 필요한 자산입니다.`,
 
     'example_inputs': `example_id,current_age,target_age,life_expectancy,monthly_expense,current_assets,monthly_savings,inflation,annual_return,post_return
 default,40,55,90,3500000,100000000,2000000,0.025,0.06,0.03`

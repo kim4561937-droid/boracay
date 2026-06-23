@@ -4,7 +4,7 @@
  * binds DOM events, and runs the first calculation render.
  */
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('경제적 자율 시뮬레이터 초기화 중...');
+  console.log('경제적 자유 시뮬레이터 초기화 중...');
 
   // 1. Load data from CSV files (with built-in offline fallbacks inside csv-loader.js)
   const presetsData = await window.CSVLoader.loadCSV('scenario_presets', 'assets/data/scenario_presets.csv');
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 6. Perform First Render & Calculation
   window.UI.render();
 
-  console.log('경제적 자율 시뮬레이터 성공적으로 초기화 완료.');
+  console.log('경제적 자유 시뮬레이터 성공적으로 초기화 완료.');
 });
 
 /**

@@ -680,7 +680,7 @@
       tbody.innerHTML = '';
 
       if (this.activeTable === 'accumulation') {
-        tableTitle.textContent = '경제적 자율 달성 전 자산 적립 시뮬레이션';
+        tableTitle.textContent = '경제적 자유 달성 전 자산 적립 시뮬레이션';
         
         thead.innerHTML = `
           <tr>
@@ -721,7 +721,7 @@
         });
 
       } else {
-        tableTitle.textContent = '경제적 자율 달성 후 자산 유지/소진 시뮬레이션';
+        tableTitle.textContent = '경제적 자유 달성 후 자산 유지/소진 시뮬레이션';
 
         thead.innerHTML = `
           <tr>

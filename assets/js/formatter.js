@@ -94,8 +94,8 @@
       const requiredAssetStr = this.formatToEokMan(results.requiredFreedomAsset);
       
       let summary = `현재 <strong>${currentAge}세</strong>, 현재 월 생활비 <strong>${monthlyExpenseNowStr}</strong>, `;
-      summary += `경제적 자율 목표 나이 <strong>${targetFreedomAge}세</strong>, 기대수명 <strong>${lifeExpectancy}세</strong>, `;
-      summary += `연 인플레이션 <strong>${inflationPercent}</strong> 기준으로 계산하면 경제적 자율에 필요한 목표자산은 약 <strong>${requiredAssetStr}</strong>입니다. `;
+      summary += `경제적 자유 목표 나이 <strong>${targetFreedomAge}세</strong>, 기대수명 <strong>${lifeExpectancy}세</strong>, `;
+      summary += `연 인플레이션 <strong>${inflationPercent}</strong> 기준으로 계산하면 경제적 자유에 필요한 목표자산은 약 <strong>${requiredAssetStr}</strong>입니다. `;
       summary += `현재 자산 <strong>${currentAssetsStr}</strong>, 월 저축액 <strong>${monthlySavingsStr}</strong>, `;
       summary += `연 <strong>${annualReturnPercent}</strong> 수익률을 가정할 경우 `;
 
@@ -105,7 +105,7 @@
         summary += `기대수명(${lifeExpectancy}세) 이전에는 목표자산 달성이 어려울 것으로 예상됩니다. `;
       }
 
-      summary += `경제적 자율 달성 후 연 <strong>${postReturnPercent}</strong> 수익률 기준으로는 생활비를 지출하면서 <strong>${statusText}</strong> 상태가 됩니다.`;
+      summary += `경제적 자유 달성 후 연 <strong>${postReturnPercent}</strong> 수익률 기준으로는 생활비를 지출하면서 <strong>${statusText}</strong> 상태가 됩니다.`;
 
       return summary;
     }
